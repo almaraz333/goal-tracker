@@ -24,7 +24,7 @@ export function CalendarHeader({
   return (
     <div className="flex items-center justify-between mb-4">
       {/* Month/Year display */}
-      <h2 className="text-xl font-bold text-gray-100">
+      <h2 className="text-xl font-bold text-text-primary">
         {getMonthName(month)} {year}
       </h2>
       

@@ -1,1 +1,1 @@
-export { useAppStore, useCalendarState, useGoalsState } from './app.store';
+export { useAppStore, useCalendarState, useGoalsState, useThemeState } from './app.store';

@@ -93,14 +93,14 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
   // Browser not supported
   if (!fsSupport.isFullySupported) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4">
         <Card className="max-w-md w-full p-6 text-center">
-          <div className="w-16 h-16 bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Smartphone className="h-8 w-8 text-red-400" />
+          <div className="w-16 h-16 bg-status-danger-bg rounded-full flex items-center justify-center mx-auto mb-4">
+            <Smartphone className="h-8 w-8 text-status-danger" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-100 mb-2">Browser Not Supported</h1>
-          <p className="text-gray-400 mb-4">{fsSupport.reason}</p>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-2xl font-bold text-text-primary mb-2">Browser Not Supported</h1>
+          <p className="text-text-muted mb-4">{fsSupport.reason}</p>
+          <p className="text-sm text-text-muted">
             Please use Chrome, Edge, or Samsung Internet on Android to access your goal files.
           </p>
         </Card>
@@ -111,28 +111,28 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
   // Permission needed for existing folder - minimal UI that auto-requests on interaction
   if (vaultAccess.status === 'permission-needed') {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4">
         <Card className="max-w-sm w-full p-5">
           {/* Compact header */}
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-blue-900/40 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-accent-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
               {isSelecting ? (
-                <RefreshCw className="h-5 w-5 text-blue-400 animate-spin" />
+                <RefreshCw className="h-5 w-5 text-accent-primary animate-spin" />
               ) : (
-                <Unlock className="h-5 w-5 text-blue-400" />
+                <Unlock className="h-5 w-5 text-accent-primary" />
               )}
             </div>
             <div>
-              <h1 className="text-base font-semibold text-gray-100">
+              <h1 className="text-base font-semibold text-text-primary">
                 {isSelecting ? 'Connecting...' : 'Tap to Continue'}
               </h1>
-              <p className="text-xs text-gray-500">{vaultAccess.folderName}</p>
+              <p className="text-xs text-text-muted">{vaultAccess.folderName}</p>
             </div>
           </div>
 
           {error && (
-            <div className="bg-red-900/30 border border-red-700 rounded-lg p-2 mb-3">
-              <p className="text-xs text-red-300">{error}</p>
+            <div className="bg-status-danger-bg border border-status-danger-border rounded-lg p-2 mb-3">
+              <p className="text-xs text-status-danger">{error}</p>
             </div>
           )}
 
@@ -150,7 +150,7 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
 
               <button 
                 onClick={handleSelectFolder}
-                className="w-full mt-2 text-xs text-gray-500 hover:text-gray-400"
+                className="w-full mt-2 text-xs text-text-muted hover:text-text-secondary"
               >
                 Select different folder
               </button>
@@ -158,7 +158,7 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
           )}
 
           {isSelecting && (
-            <p className="text-xs text-gray-500 text-center">
+            <p className="text-xs text-text-muted text-center">
               Please allow access when prompted...
             </p>
           )}
@@ -169,14 +169,14 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
 
   // First time setup - no folder selected
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4">
       <Card className="max-w-md w-full p-6">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <FolderOpen className="h-8 w-8 text-blue-400" />
+          <div className="w-16 h-16 bg-accent-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FolderOpen className="h-8 w-8 text-accent-primary" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-100 mb-2">Welcome to Goal Tracker</h1>
-          <p className="text-gray-400">
+          <h1 className="text-2xl font-bold text-text-primary mb-2">Welcome to Goal Tracker</h1>
+          <p className="text-text-muted">
             Connect to your goals folder to get started.
           </p>
         </div>
@@ -184,36 +184,36 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
         {/* Steps */}
         <div className="space-y-4 mb-6">
           <div className="flex items-start gap-3">
-            <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-xs font-bold text-white">1</span>
+            <div className="w-6 h-6 bg-accent-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-xs font-bold text-text-inverse">1</span>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-200">Select your Goals folder</p>
-              <p className="text-xs text-gray-500">
+              <p className="text-sm font-medium text-text-primary">Select your Goals folder</p>
+              <p className="text-xs text-text-muted">
                 Navigate to your Obsidian vault's Goals directory
               </p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <div className="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-xs font-bold text-gray-400">2</span>
+            <div className="w-6 h-6 bg-bg-tertiary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-xs font-bold text-text-muted">2</span>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-400">Grant read/write access</p>
-              <p className="text-xs text-gray-600">
+              <p className="text-sm font-medium text-text-muted">Grant read/write access</p>
+              <p className="text-xs text-text-muted">
                 Allows the app to read and update your goal files
               </p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <div className="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-xs font-bold text-gray-400">3</span>
+            <div className="w-6 h-6 bg-bg-tertiary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-xs font-bold text-text-muted">3</span>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-400">Track your goals</p>
-              <p className="text-xs text-gray-600">
+              <p className="text-sm font-medium text-text-muted">Track your goals</p>
+              <p className="text-xs text-text-muted">
                 Changes sync automatically with your files
               </p>
             </div>
@@ -221,8 +221,8 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
         </div>
 
         {error && (
-          <div className="bg-red-900/30 border border-red-700 rounded-lg p-3 mb-4">
-            <p className="text-sm text-red-300">{error}</p>
+          <div className="bg-status-danger-bg border border-status-danger-border rounded-lg p-3 mb-4">
+            <p className="text-sm text-status-danger">{error}</p>
           </div>
         )}
 
@@ -244,7 +244,7 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
           )}
         </Button>
 
-        <p className="text-xs text-gray-600 text-center mt-4">
+        <p className="text-xs text-text-muted text-center mt-4">
           Your goals are stored locally on your device. 
           Use Syncthing or similar to sync with other devices.
         </p>

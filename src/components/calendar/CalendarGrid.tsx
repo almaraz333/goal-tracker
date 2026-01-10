@@ -28,17 +28,17 @@ export function CalendarGrid({
   
 
   return (
-    <div className="bg-gray-800/50 rounded-xl p-3">
+    <div className="bg-bg-secondary/50 rounded-xl p-3">
       {/* Weekday headers */}
       <div className="grid grid-cols-8 gap-1 mb-2">
         {/* Week indicator column header */}
-        <div className="text-center text-xs font-medium text-gray-600 py-2">
+        <div className="text-center text-xs font-medium text-text-muted py-2">
           Wk
         </div>
         {WEEKDAYS.map((_, index) => (
           <div
             key={index}
-            className="text-center text-xs font-medium text-gray-500 py-2"
+            className="text-center text-xs font-medium text-text-muted py-2"
           >
             {getDayName(index, 'narrow')}
           </div>
@@ -58,7 +58,7 @@ export function CalendarGrid({
             <div 
               key={week.weekIndex} 
               className={`grid grid-cols-8 gap-1 ${
-                isSelectedWeek ? 'bg-blue-900/20 rounded-lg' : ''
+                isSelectedWeek ? 'bg-accent-primary/20 rounded-lg' : ''
               }`}
             >
               {/* Week indicator */}
@@ -68,11 +68,11 @@ export function CalendarGrid({
                   flex items-center justify-center py-2 rounded-lg text-xs font-medium
                   transition-colors
                   ${hasWeeklyGoals 
-                    ? 'hover:bg-gray-700 cursor-pointer' 
+                    ? 'hover:bg-bg-hover cursor-pointer' 
                     : 'cursor-default'
                   }
-                  ${isSelectedWeek ? 'bg-blue-600 text-white' : 'text-gray-500'}
-                  ${weekComplete && !isSelectedWeek ? 'text-green-400' : ''}
+                  ${isSelectedWeek ? 'bg-accent-primary text-text-inverse' : 'text-text-muted'}
+                  ${weekComplete && !isSelectedWeek ? 'text-status-success' : ''}
                 `}
                 disabled={!hasWeeklyGoals}
               >
@@ -98,18 +98,18 @@ export function CalendarGrid({
       </div>
       
       {/* Month summary */}
-      <div className="mt-4 pt-3 border-t border-gray-700 flex items-center justify-between text-sm">
-        <span className="text-gray-400">
+      <div className="mt-4 pt-3 border-t border-border-primary flex items-center justify-between text-sm">
+        <span className="text-text-muted">
           {calendarMonth.completedDays} of {calendarMonth.totalDays} days completed
         </span>
         <div className={`px-2 py-1 rounded text-xs font-medium ${
           calendarMonth.status === 'green' 
-            ? 'bg-green-900/50 text-green-300' 
+            ? 'bg-status-success-bg text-status-success' 
             : calendarMonth.status === 'orange'
-              ? 'bg-yellow-900/50 text-yellow-300'
+              ? 'bg-status-warning-bg text-status-warning'
               : calendarMonth.status === 'red'
-                ? 'bg-red-900/50 text-red-300'
-                : 'bg-gray-700 text-gray-400'
+                ? 'bg-status-danger-bg text-status-danger'
+                : 'bg-bg-tertiary text-text-muted'
         }`}>
           {calendarMonth.status === 'none' ? 'No tasks' : calendarMonth.status.toUpperCase()}
         </div>

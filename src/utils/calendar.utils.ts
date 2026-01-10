@@ -351,14 +351,14 @@ export function buildCalendarMonth(year: number, month: number, goals: Goal[]): 
 export function getDayStatusColor(status: DayStatus): string {
   switch (status) {
     case 'complete':
-      return 'bg-green-500';
+      return 'bg-progress-complete';
     case 'incomplete':
-      return 'bg-red-500';
+      return 'bg-status-danger';
     case 'partial':
-      return 'bg-orange-500';
+      return 'bg-status-warning';
     case 'none':
     default:
-      return 'bg-gray-700';
+      return 'bg-progress-empty';
   }
 }
 
@@ -368,13 +368,13 @@ export function getDayStatusColor(status: DayStatus): string {
 export function getMonthStatusColor(status: MonthStatus): string {
   switch (status) {
     case 'green':
-      return 'text-green-500';
+      return 'text-status-success';
     case 'orange':
-      return 'text-orange-500';
+      return 'text-status-warning';
     case 'red':
-      return 'text-red-500';
+      return 'text-status-danger';
     case 'none':
     default:
-      return 'text-gray-500';
+      return 'text-text-muted';
   }
 }

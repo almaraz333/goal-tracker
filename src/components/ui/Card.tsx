@@ -11,9 +11,9 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const variantStyles = {
-  default: 'bg-gray-800',
-  elevated: 'bg-gray-800 shadow-lg shadow-black/20',
-  outlined: 'bg-transparent border border-gray-700',
+  default: 'bg-bg-card',
+  elevated: 'bg-bg-card shadow-lg shadow-black/20',
+  outlined: 'bg-transparent border border-border-primary',
 };
 
 const paddingStyles = {
@@ -65,7 +65,7 @@ interface CardTitleProps {
 
 export function CardTitle({ children, className = '' }: CardTitleProps) {
   return (
-    <h3 className={`text-lg font-semibold text-gray-100 ${className}`}>
+    <h3 className={`text-lg font-semibold text-text-primary ${className}`}>
       {children}
     </h3>
   );

@@ -48,19 +48,19 @@ export function GoalsListModal({
   const getTypeIcon = () => {
     switch (goalType) {
       case 'daily':
-        return <Target className="h-6 w-6 text-blue-400" />;
+        return <Target className="h-6 w-6 text-accent-primary" />;
       case 'weekly':
-        return <Calendar className="h-6 w-6 text-purple-400" />;
+        return <Calendar className="h-6 w-6 text-accent-secondary" />;
       case 'monthly':
-        return <Repeat className="h-6 w-6 text-green-400" />;
+        return <Repeat className="h-6 w-6 text-status-success" />;
     }
   };
 
   const getTypeColor = () => {
     switch (goalType) {
-      case 'daily': return 'text-blue-400';
-      case 'weekly': return 'text-purple-400';
-      case 'monthly': return 'text-green-400';
+      case 'daily': return 'text-accent-primary';
+      case 'weekly': return 'text-accent-secondary';
+      case 'monthly': return 'text-status-success';
     }
   };
 
@@ -102,13 +102,13 @@ export function GoalsListModal({
         ) : (
           <div className="space-y-4">
             {/* Summary */}
-            <div className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg">
+            <div className="flex items-center gap-3 p-3 bg-bg-secondary/50 rounded-lg">
               {getTypeIcon()}
               <div>
                 <p className={`text-lg font-semibold ${getTypeColor()}`}>
                   {activeGoals.length} Active
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-text-muted">
                   {inactiveGoals.length} inactive ({filteredGoals.length} total)
                 </p>
               </div>
@@ -117,7 +117,7 @@ export function GoalsListModal({
             {/* Active Goals */}
             {activeGoals.length > 0 && (
               <div>
-                <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wide mb-2">
+                <h3 className="text-sm font-medium text-text-muted uppercase tracking-wide mb-2">
                   Active Goals
                 </h3>
                 <div className="space-y-2">
@@ -135,7 +135,7 @@ export function GoalsListModal({
             {/* Inactive Goals */}
             {inactiveGoals.length > 0 && (
               <div>
-                <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-2">
+                <h3 className="text-sm font-medium text-text-muted uppercase tracking-wide mb-2">
                   Inactive Goals
                 </h3>
                 <div className="space-y-2 opacity-60">
@@ -153,11 +153,11 @@ export function GoalsListModal({
             {/* Empty State */}
             {filteredGoals.length === 0 && (
               <div className="text-center py-8">
-                <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
                   {getTypeIcon()}
                 </div>
-                <p className="text-gray-400">No {goalType} goals found</p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-text-muted">No {goalType} goals found</p>
+                <p className="text-xs text-text-muted mt-1">
                   Create a new {goalType} goal in your Obsidian vault
                 </p>
               </div>
@@ -177,10 +177,10 @@ interface GoalListItemProps {
 function GoalListItem({ goal, onClick }: GoalListItemProps) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high': return 'bg-red-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-green-500';
-      default: return 'bg-gray-500';
+      case 'high': return 'bg-status-danger';
+      case 'medium': return 'bg-status-warning';
+      case 'low': return 'bg-status-success';
+      default: return 'bg-text-muted';
     }
   };
 
@@ -202,14 +202,14 @@ function GoalListItem({ goal, onClick }: GoalListItemProps) {
   return (
     <button
       onClick={onClick}
-      className="w-full text-left p-3 bg-gray-800 hover:bg-gray-750 rounded-lg transition-colors group"
+      className="w-full text-left p-3 bg-bg-secondary hover:bg-bg-hover rounded-lg transition-colors group"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           {/* Title & Priority */}
           <div className="flex items-center gap-2 mb-1">
             <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getPriorityColor(goal.priority)}`} />
-            <h4 className="text-sm font-medium text-gray-100 truncate">
+            <h4 className="text-sm font-medium text-text-primary truncate">
               {goal.title}
             </h4>
             {getStatusBadge(goal.status)}
@@ -217,13 +217,13 @@ function GoalListItem({ goal, onClick }: GoalListItemProps) {
 
           {/* Description */}
           {goal.description && (
-            <p className="text-xs text-gray-500 line-clamp-2 mb-2">
+            <p className="text-xs text-text-muted line-clamp-2 mb-2">
               {goal.description}
             </p>
           )}
 
           {/* Meta info */}
-          <div className="flex items-center gap-3 text-xs text-gray-500">
+          <div className="flex items-center gap-3 text-xs text-text-muted">
             {/* Category */}
             <span className="flex items-center gap-1">
               <Tag className="h-3 w-3" />
@@ -252,13 +252,13 @@ function GoalListItem({ goal, onClick }: GoalListItemProps) {
               {goal.tags.slice(0, 3).map(tag => (
                 <span 
                   key={tag} 
-                  className="px-1.5 py-0.5 bg-gray-700 rounded text-xs text-gray-400"
+                  className="px-1.5 py-0.5 bg-bg-tertiary rounded text-xs text-text-muted"
                 >
                   {tag}
                 </span>
               ))}
               {goal.tags.length > 3 && (
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-text-muted">
                   +{goal.tags.length - 3} more
                 </span>
               )}
@@ -267,7 +267,7 @@ function GoalListItem({ goal, onClick }: GoalListItemProps) {
         </div>
 
         {/* Chevron */}
-        <ChevronRight className="h-5 w-5 text-gray-600 group-hover:text-gray-400 flex-shrink-0 mt-1" />
+        <ChevronRight className="h-5 w-5 text-text-muted group-hover:text-text-secondary flex-shrink-0 mt-1" />
       </div>
     </button>
   );

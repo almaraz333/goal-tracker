@@ -78,9 +78,9 @@ export function VaultStatus({ onStatusChange }: VaultStatusProps) {
   // Ready state - compact indicator
   if (status === 'ready') {
     return (
-      <div className="flex items-center gap-1.5 px-2 py-1 bg-green-900/30 border border-green-800 rounded-lg">
-        <CheckCircle className="h-3.5 w-3.5 text-green-400" />
-        <span className="text-xs text-green-300 truncate max-w-[100px]">
+      <div className="flex items-center gap-1.5 px-2 py-1 bg-status-success-bg border border-status-success-border rounded-lg">
+        <CheckCircle className="h-3.5 w-3.5 text-status-success" />
+        <span className="text-xs text-status-success truncate max-w-[100px]">
           {folderName}
         </span>
       </div>
@@ -95,7 +95,7 @@ export function VaultStatus({ onStatusChange }: VaultStatusProps) {
         variant="ghost"
         size="sm"
         disabled={isLoading}
-        className="text-yellow-400 border-yellow-600 hover:bg-yellow-900/30"
+        className="text-status-warning border-status-warning-border hover:bg-status-warning-bg"
       >
         {isLoading ? (
           <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
@@ -115,7 +115,7 @@ export function VaultStatus({ onStatusChange }: VaultStatusProps) {
         variant="ghost"
         size="sm"
         disabled={isLoading}
-        className="text-blue-400 border-blue-600 hover:bg-blue-900/30"
+        className="text-accent-primary border-accent-primary hover:bg-accent-primary/20"
       >
         {isLoading ? (
           <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
@@ -130,9 +130,9 @@ export function VaultStatus({ onStatusChange }: VaultStatusProps) {
   // Error state
   if (status === 'error') {
     return (
-      <div className="flex items-center gap-1.5 px-2 py-1 bg-red-900/30 border border-red-800 rounded-lg">
-        <AlertCircle className="h-3.5 w-3.5 text-red-400" />
-        <span className="text-xs text-red-300">Error</span>
+      <div className="flex items-center gap-1.5 px-2 py-1 bg-status-danger-bg border border-status-danger-border rounded-lg">
+        <AlertCircle className="h-3.5 w-3.5 text-status-danger" />
+        <span className="text-xs text-status-danger">Error</span>
       </div>
     );
   }

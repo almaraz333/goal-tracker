@@ -3,8 +3,18 @@
  */
 
 import { create } from 'zustand';
-import type { Goal } from '@/types';
+import { useShallow } from 'zustand/react/shallow';
+import type { Goal, Theme } from '@/types';
 import { saveGoal } from '@/services';
+import { 
+  applyTheme, 
+  getStoredThemeId, 
+  setStoredThemeId, 
+  getStoredCustomThemes,
+  setStoredCustomThemes,
+  getThemeById,
+} from '@/services';
+import { getDefaultTheme } from '@/config';
 
 interface AppState {
   // Calendar state
@@ -16,6 +26,10 @@ interface AppState {
   goals: Goal[];
   isLoading: boolean;
   error: string | null;
+  
+  // Theme state
+  activeThemeId: string;
+  customThemes: Theme[];
   
   // Actions
   setCurrentDate: (date: Date) => void;
@@ -32,6 +46,12 @@ interface AppState {
   updateMonthlyProgress: (goalId: string, monthKey: string, delta: number) => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
+  
+  // Theme actions
+  setTheme: (themeId: string) => void;
+  saveCustomTheme: (theme: Theme) => void;
+  deleteCustomTheme: (themeId: string) => void;
+  getActiveTheme: () => Theme;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -42,6 +62,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   goals: [],
   isLoading: false,
   error: null,
+  
+  // Theme initial state (loaded from localStorage)
+  activeThemeId: getStoredThemeId(),
+  customThemes: getStoredCustomThemes(),
   
   // Calendar actions
   setCurrentDate: (date) => set({ currentDate: date }),
@@ -205,17 +229,77 @@ export const useAppStore = create<AppState>((set, get) => ({
   setLoading: (isLoading) => set({ isLoading }),
   
   setError: (error) => set({ error }),
+  
+  // Theme actions
+  setTheme: (themeId) => {
+    const theme = getThemeById(themeId) ?? getDefaultTheme();
+    applyTheme(theme);
+    setStoredThemeId(themeId);
+    set({ activeThemeId: themeId });
+  },
+  
+  saveCustomTheme: (theme) => {
+    const { customThemes } = get();
+    const existingIndex = customThemes.findIndex(t => t.id === theme.id);
+    
+    let newCustomThemes: Theme[];
+    if (existingIndex >= 0) {
+      newCustomThemes = [...customThemes];
+      newCustomThemes[existingIndex] = theme;
+    } else {
+      newCustomThemes = [...customThemes, theme];
+    }
+    
+    setStoredCustomThemes(newCustomThemes);
+    set({ customThemes: newCustomThemes });
+  },
+  
+  deleteCustomTheme: (themeId) => {
+    const { customThemes, activeThemeId } = get();
+    const newCustomThemes = customThemes.filter(t => t.id !== themeId);
+    setStoredCustomThemes(newCustomThemes);
+    
+    // If deleting the active theme, switch to default
+    if (activeThemeId === themeId) {
+      const defaultTheme = getDefaultTheme();
+      applyTheme(defaultTheme);
+      setStoredThemeId(defaultTheme.id);
+      set({ customThemes: newCustomThemes, activeThemeId: defaultTheme.id });
+    } else {
+      set({ customThemes: newCustomThemes });
+    }
+  },
+  
+  getActiveTheme: () => {
+    const { activeThemeId } = get();
+    return getThemeById(activeThemeId) ?? getDefaultTheme();
+  },
 }));
 
 // Selector hooks for better performance
-export const useCalendarState = () => useAppStore((state) => ({
-  currentDate: state.currentDate,
-  selectedDate: state.selectedDate,
-  viewMode: state.viewMode,
-}));
+export const useCalendarState = () => useAppStore(
+  useShallow((state) => ({
+    currentDate: state.currentDate,
+    selectedDate: state.selectedDate,
+    viewMode: state.viewMode,
+  }))
+);
 
-export const useGoalsState = () => useAppStore((state) => ({
-  goals: state.goals,
-  isLoading: state.isLoading,
-  error: state.error,
-}));
+export const useGoalsState = () => useAppStore(
+  useShallow((state) => ({
+    goals: state.goals,
+    isLoading: state.isLoading,
+    error: state.error,
+  }))
+);
+
+export const useThemeState = () => useAppStore(
+  useShallow((state) => ({
+    activeThemeId: state.activeThemeId,
+    customThemes: state.customThemes,
+    setTheme: state.setTheme,
+    saveCustomTheme: state.saveCustomTheme,
+    deleteCustomTheme: state.deleteCustomTheme,
+    getActiveTheme: state.getActiveTheme,
+  }))
+);

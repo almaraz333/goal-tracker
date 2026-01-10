@@ -15,11 +15,11 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-gray-700 text-gray-300',
-  success: 'bg-green-900/50 text-green-400 border border-green-700',
-  warning: 'bg-orange-900/50 text-orange-400 border border-orange-700',
-  danger: 'bg-red-900/50 text-red-400 border border-red-700',
-  info: 'bg-blue-900/50 text-blue-400 border border-blue-700',
+  default: 'bg-bg-tertiary text-text-secondary',
+  success: 'bg-status-success-bg text-status-success border border-status-success-border',
+  warning: 'bg-status-warning-bg text-status-warning border border-status-warning-border',
+  danger: 'bg-status-danger-bg text-status-danger border border-status-danger-border',
+  info: 'bg-status-info-bg text-status-info border border-status-info-border',
 };
 
 const sizeStyles: Record<BadgeSize, string> = {

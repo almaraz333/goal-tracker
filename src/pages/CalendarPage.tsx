@@ -97,11 +97,11 @@ function StatCard({ label, value, icon, onClick }: StatCardProps) {
   return (
     <button
       onClick={onClick}
-      className="bg-gray-800 hover:bg-gray-750 rounded-xl p-3 text-center transition-colors cursor-pointer group"
+      className="bg-bg-card hover:bg-bg-hover rounded-xl p-3 text-center transition-colors cursor-pointer group"
     >
       <div className="flex justify-center mb-1 group-hover:scale-110 transition-transform">{icon}</div>
-      <div className="text-xl font-bold text-gray-100">{value}</div>
-      <div className="text-xs text-gray-500">{label}</div>
+      <div className="text-xl font-bold text-text-primary">{value}</div>
+      <div className="text-xs text-text-muted">{label}</div>
     </button>
   );
 }

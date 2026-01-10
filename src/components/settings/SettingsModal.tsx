@@ -2,14 +2,17 @@
  * Settings Modal component - allows users to configure app settings
  * 
  * Features:
+ * - Theme customization with presets and custom themes
  * - Vault path configuration for development mode
  * - Folder picker for PWA mode (File System Access API)
  * - Permission status indicator
  */
 
 import { useState, useMemo, useEffect } from 'react';
-import { Settings, FolderOpen, X, Save, CheckCircle, AlertCircle, Folder } from 'lucide-react';
+import { Settings, FolderOpen, X, Save, CheckCircle, AlertCircle, Folder, Palette } from 'lucide-react';
 import { Button, Modal, Card } from '@/components/ui';
+import { ThemeSelector } from './ThemeSelector';
+import { CustomThemeEditor } from './CustomThemeEditor';
 import { getStoredVaultPath, setStoredVaultPath, DEFAULT_VAULT_PATH } from '@/utils/settings.utils';
 import { 
   getStorageMode, 
@@ -34,6 +37,9 @@ export function SettingsModal({ isOpen, onClose, onVaultPathChange, onFolderSele
   const [hasChanges, setHasChanges] = useState(false);
   const [saved, setSaved] = useState(false);
   
+  // Theme editor state
+  const [isEditingTheme, setIsEditingTheme] = useState(false);
+  
   // Storage state for native FS mode
   const [storageState, setStorageState] = useState<StorageState | null>(null);
   const [isSelectingFolder, setIsSelectingFolder] = useState(false);
@@ -45,6 +51,10 @@ export function SettingsModal({ isOpen, onClose, onVaultPathChange, onFolderSele
   useEffect(() => {
     if (isOpen && storageMode === 'native-fs') {
       getStorageState().then(setStorageState);
+    }
+    // Reset theme editing when modal closes
+    if (!isOpen) {
+      setIsEditingTheme(false);
     }
   }, [isOpen, storageMode]);
 
@@ -93,6 +103,25 @@ export function SettingsModal({ isOpen, onClose, onVaultPathChange, onFolderSele
     <Modal isOpen={isOpen} onClose={onClose} title="Settings">
       <div className="space-y-6">
         
+        {/* Theme Customization Section */}
+        <Card className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Palette className="h-5 w-5 text-accent-secondary" />
+            <h3 className="text-lg font-semibold text-text-primary">Appearance</h3>
+          </div>
+          
+          {isEditingTheme ? (
+            <CustomThemeEditor onClose={() => setIsEditingTheme(false)} />
+          ) : (
+            <>
+              <p className="text-sm text-text-muted mb-4">
+                Choose a theme or create your own custom color scheme.
+              </p>
+              <ThemeSelector onCreateCustom={() => setIsEditingTheme(true)} />
+            </>
+          )}
+        </Card>
+
         {/* Native File System Mode (PWA/Production) */}
         {storageMode === 'native-fs' && (
           <Card className="p-4">

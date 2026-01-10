@@ -31,26 +31,26 @@ export function MonthlyProgress({
     <Card className="p-4 mt-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Target className="h-5 w-5 text-purple-400" />
-          <h3 className="text-lg font-semibold text-gray-100">
+          <Target className="h-5 w-5 text-accent-secondary" />
+          <h3 className="text-lg font-semibold text-text-primary">
             {monthName} Goals
           </h3>
         </div>
-        <span className="text-sm text-gray-400">
+        <span className="text-sm text-text-muted">
           {completedCount}/{totalCount} complete
         </span>
       </div>
       
       {/* Overall Progress Bar */}
       <div className="mb-6">
-        <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-2 bg-progress-empty rounded-full overflow-hidden">
           <div 
             className={`h-full transition-all duration-300 ${
               overallProgress === 100 
-                ? 'bg-green-500' 
+                ? 'bg-progress-complete' 
                 : overallProgress >= 50 
-                  ? 'bg-yellow-500' 
-                  : 'bg-red-500'
+                  ? 'bg-progress-partial' 
+                  : 'bg-status-danger'
             }`}
             style={{ width: `${overallProgress}%` }}
           />
@@ -89,28 +89,28 @@ function MonthlyGoalItem({ task, onIncrement, onDecrement }: MonthlyGoalItemProp
   return (
     <div className={`p-4 rounded-lg ${
       isAtTarget 
-        ? 'bg-green-900/30 border border-green-700' 
+        ? 'bg-status-success-bg border border-status-success-border' 
         : isAtMinimum 
-          ? 'bg-yellow-900/20 border border-yellow-700/50' 
-          : 'bg-gray-800 border border-gray-700'
+          ? 'bg-status-warning-bg border border-status-warning-border' 
+          : 'bg-bg-secondary border border-border-primary'
     }`}>
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
           {isAtTarget ? (
-            <CheckCircle2 className="h-5 w-5 text-green-400" />
+            <CheckCircle2 className="h-5 w-5 text-status-success" />
           ) : (
-            <Circle className="h-5 w-5 text-gray-500" />
+            <Circle className="h-5 w-5 text-text-muted" />
           )}
-          <span className={`font-medium ${isAtTarget ? 'text-green-300' : 'text-gray-200'}`}>
+          <span className={`font-medium ${isAtTarget ? 'text-status-success' : 'text-text-primary'}`}>
             {task.goal.title}
           </span>
         </div>
         <span className={`text-xs px-2 py-1 rounded ${
           task.goal.priority === 'high' 
-            ? 'bg-red-900/50 text-red-300' 
+            ? 'bg-status-danger-bg text-status-danger' 
             : task.goal.priority === 'medium'
-              ? 'bg-yellow-900/50 text-yellow-300'
-              : 'bg-gray-700 text-gray-400'
+              ? 'bg-status-warning-bg text-status-warning'
+              : 'bg-bg-tertiary text-text-muted'
         }`}>
           {task.goal.priority}
         </span>
@@ -118,11 +118,11 @@ function MonthlyGoalItem({ task, onIncrement, onDecrement }: MonthlyGoalItemProp
       
       {/* Progress Bar */}
       <div className="mb-3">
-        <div className="h-3 bg-gray-700 rounded-full overflow-hidden relative">
+        <div className="h-3 bg-progress-empty rounded-full overflow-hidden relative">
           {/* Minimum threshold marker */}
           {task.minimumCount !== task.targetCount && (
             <div 
-              className="absolute top-0 bottom-0 w-0.5 bg-yellow-500 z-10"
+              className="absolute top-0 bottom-0 w-0.5 bg-status-warning z-10"
               style={{ left: `${(task.minimumCount / task.targetCount) * 100}%` }}
             />
           )}
@@ -130,10 +130,10 @@ function MonthlyGoalItem({ task, onIncrement, onDecrement }: MonthlyGoalItemProp
           <div 
             className={`h-full transition-all duration-300 ${
               isAtTarget 
-                ? 'bg-green-500' 
+                ? 'bg-progress-complete' 
                 : isAtMinimum 
-                  ? 'bg-yellow-500' 
-                  : 'bg-blue-500'
+                  ? 'bg-progress-partial' 
+                  : 'bg-accent-primary'
             }`}
             style={{ width: `${Math.min(progress, 100)}%` }}
           />
@@ -142,10 +142,10 @@ function MonthlyGoalItem({ task, onIncrement, onDecrement }: MonthlyGoalItemProp
       
       {/* Counter Controls */}
       <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-400">
+        <span className="text-sm text-text-muted">
           {task.currentCount} / {task.targetCount}
           {task.minimumCount !== task.targetCount && (
-            <span className="text-gray-500"> (min: {task.minimumCount})</span>
+            <span className="text-text-muted"> (min: {task.minimumCount})</span>
           )}
         </span>
         
@@ -153,18 +153,18 @@ function MonthlyGoalItem({ task, onIncrement, onDecrement }: MonthlyGoalItemProp
           <button
             onClick={onDecrement}
             disabled={task.currentCount <= 0}
-            className="p-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 rounded-lg bg-bg-tertiary hover:bg-bg-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <Minus className="h-4 w-4 text-gray-300" />
+            <Minus className="h-4 w-4 text-text-secondary" />
           </button>
-          <span className="text-lg font-bold text-gray-200 min-w-[2rem] text-center">
+          <span className="text-lg font-bold text-text-primary min-w-[2rem] text-center">
             {task.currentCount}
           </span>
           <button
             onClick={onIncrement}
-            className="p-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 transition-colors"
+            className="p-1.5 rounded-lg bg-accent-primary hover:bg-accent-primary-hover transition-colors"
           >
-            <Plus className="h-4 w-4 text-white" />
+            <Plus className="h-4 w-4 text-text-inverse" />
           </button>
         </div>
       </div>

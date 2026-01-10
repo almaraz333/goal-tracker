@@ -62,7 +62,7 @@ export function Modal({
       <div
         className={`
           relative w-full ${sizeStyles[size]}
-          bg-gray-800 rounded-xl shadow-2xl
+          bg-bg-card rounded-xl shadow-2xl
           animate-in fade-in zoom-in-95 duration-200
         `}
         role="dialog"
@@ -71,13 +71,13 @@ export function Modal({
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-            <h2 id="modal-title" className="text-lg font-semibold text-gray-100">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border-primary">
+            <h2 id="modal-title" className="text-lg font-semibold text-text-primary">
               {title}
             </h2>
             <button
               onClick={onClose}
-              className="p-1 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-colors"
+              className="p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-hover transition-colors"
               aria-label="Close modal"
             >
               <X className="h-5 w-5" />

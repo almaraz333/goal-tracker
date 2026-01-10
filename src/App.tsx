@@ -173,10 +173,10 @@ export function App() {
       <MainLayout>
         <Card className="text-center py-8">
           <div className="text-4xl mb-4">😕</div>
-          <h2 className="text-xl font-bold text-gray-100 mb-2">
+          <h2 className="text-xl font-bold text-text-primary mb-2">
             Failed to load goals
           </h2>
-          <p className="text-gray-400 mb-4">{error}</p>
+          <p className="text-text-muted mb-4">{error}</p>
           <Button onClick={() => window.location.reload()}>
             Retry
           </Button>

@@ -37,3 +37,18 @@ export {
   type StorageMode,
   type StorageState,
 } from './storage.service';
+
+// Theme service exports
+export {
+  applyTheme,
+  getStoredThemeId,
+  setStoredThemeId,
+  getStoredCustomThemes,
+  setStoredCustomThemes,
+  getAllThemes,
+  getThemeById,
+  initializeTheme,
+  createCustomTheme,
+  saveCustomTheme,
+  deleteCustomTheme,
+} from './theme.service';
