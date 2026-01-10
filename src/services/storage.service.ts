@@ -10,7 +10,7 @@
 
 import type { Goal } from '@/types';
 import type { VaultAccessState } from '@/types/fileSystem.types';
-import { registerGoalFiles, loadGoalsFromFiles, saveGoal as saveGoalVite } from './fileSystem.service';
+import { registerGoalFiles, loadGoalsFromFiles, saveGoal as saveGoalVite, getGoalContent } from './fileSystem.service';
 import { 
   checkFileSystemSupport,
   getVaultAccessState,
@@ -20,6 +20,8 @@ import {
   requestStoredHandlePermission,
   clearVaultAccess,
   cacheFileContent,
+  getRawGoalContent as getNativeFSContent,
+  saveRawGoalContent as saveNativeFSContent,
 } from './nativeFileSystem.service';
 
 /**
@@ -193,6 +195,33 @@ export function requiresUserAction(state: StorageState): boolean {
            state.vaultAccess.status === 'permission-needed';
   }
   return false;
+}
+
+/**
+ * Get raw goal content from the appropriate cache
+ */
+export function getRawGoalContent(filePath: string): string | null {
+  if (currentMode === 'vite') {
+    return getGoalContent(filePath);
+  }
+  
+  if (currentMode === 'native-fs') {
+    return getNativeFSContent(filePath);
+  }
+  
+  return null;
+}
+
+/**
+ * Save raw goal content to the appropriate storage
+ */
+export async function saveRawGoalContent(filePath: string, content: string): Promise<void> {
+  if (currentMode === 'native-fs') {
+    return saveNativeFSContent(filePath, content);
+  }
+  
+  // In Vite mode, we can't save raw content (would need a dev server endpoint)
+  throw new Error('Saving raw content is only available in PWA mode');
 }
 
 /**

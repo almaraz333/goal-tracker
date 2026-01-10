@@ -256,6 +256,9 @@ async function readDirectoryRecursive(
         // Extract category from path
         const category = basePath || 'Uncategorized';
         
+        // Cache the content for later editing
+        fileContentCache.set(entryPath, content);
+        
         // Parse the goal
         const frontmatter = parseFrontmatter(content);
         const goal = frontmatterToGoal(frontmatter, content, entryPath, category);
@@ -450,4 +453,44 @@ export function saveGoalToNativeFSDebounced(goal: Goal): void {
   }, SAVE_DEBOUNCE_MS);
   
   saveTimers.set(goal.id, timer);
+}
+
+/**
+ * Get the raw markdown content for a goal
+ */
+export function getRawGoalContent(filePath: string): string | null {
+  return fileContentCache.get(filePath) ?? null;
+}
+
+/**
+ * Save raw markdown content for a goal
+ */
+export async function saveRawGoalContent(filePath: string, content: string): Promise<void> {
+  if (!currentDirectoryHandle) {
+    throw new Error('No directory access. Please select a goals folder first.');
+  }
+  
+  // Parse the file path to get directory and filename
+  const pathParts = filePath.split('/');
+  const fileName = pathParts.pop()!;
+  
+  // Navigate to the correct subdirectory
+  let targetDir = currentDirectoryHandle;
+  for (const part of pathParts) {
+    try {
+      targetDir = await targetDir.getDirectoryHandle(part);
+    } catch {
+      // Directory doesn't exist, create it
+      targetDir = await targetDir.getDirectoryHandle(part, { create: true });
+    }
+  }
+  
+  // Update cache
+  fileContentCache.set(filePath, content);
+  
+  // Write to file
+  const fileHandle = await targetDir.getFileHandle(fileName, { create: true });
+  const writable = await fileHandle.createWritable();
+  await writable.write(content);
+  await writable.close();
 }

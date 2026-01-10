@@ -279,6 +279,16 @@ interface GoalFile {
 // This will be populated by the goal loader
 let goalFiles: GoalFile[] = [];
 
+// Cache for goal file content (for viewing/editing in dev mode)
+const goalContentCache = new Map<string, string>();
+
+/**
+ * Get cached goal content by file path
+ */
+export function getGoalContent(filePath: string): string | null {
+  return goalContentCache.get(filePath) ?? null;
+}
+
 /**
  * Register goal files (called by the generated goal manifest)
  */
@@ -293,6 +303,9 @@ export function loadGoalsFromFiles(): Goal[] {
   return goalFiles
     .filter(file => !file.path.includes('_category'))
     .map(file => {
+      // Cache the content for later viewing/editing
+      goalContentCache.set(file.path, file.content);
+      
       const frontmatter = parseFrontmatter(file.content);
       return frontmatterToGoal(frontmatter, file.content, file.path, file.category);
     });

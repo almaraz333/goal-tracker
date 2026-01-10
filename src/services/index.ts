@@ -7,9 +7,21 @@ export {
 } from './fileSystem.service';
 
 export * from './handleStorage.service';
-export * from './nativeFileSystem.service';
 
-// Export storage adapter as the primary save mechanism
+// Re-export specific functions from nativeFileSystem.service (avoid conflicts with storage.service)
+export { 
+  checkFileSystemSupport,
+  shouldUseNativeFileSystem,
+  requestDirectoryAccess,
+  getVaultAccessState,
+  requestStoredHandlePermission,
+  clearVaultAccess,
+  getStoredFolderName,
+  loadGoalsFromNativeFS,
+  cacheFileContent,
+} from './nativeFileSystem.service';
+
+// Export storage adapter as the primary mechanism
 export { 
   saveGoal, 
   loadGoals, 
@@ -20,6 +32,8 @@ export {
   requestStoredPermission,
   clearFolderAccess,
   requiresUserAction,
+  getRawGoalContent,
+  saveRawGoalContent,
   type StorageMode,
   type StorageState,
 } from './storage.service';
