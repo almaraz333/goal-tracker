@@ -3,10 +3,13 @@
  * 
  * Shown when the app is running in PWA mode and no vault folder has been selected.
  * Guides the user through selecting their Obsidian vault's Goals directory.
+ * 
+ * For returning users who just need to re-grant permission, shows a minimal banner
+ * and auto-requests permission on the first user interaction.
  */
 
-import { useState } from 'react';
-import { FolderOpen, Smartphone, CheckCircle, ArrowRight, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { FolderOpen, Smartphone, CheckCircle, ArrowRight, RefreshCw, Unlock } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
 import { requestFolderAccess, requestStoredPermission, checkFileSystemSupport } from '@/services';
 import type { VaultAccessState } from '@/types/fileSystem.types';
@@ -19,6 +22,7 @@ interface VaultSetupScreenProps {
 export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenProps) {
   const [isSelecting, setIsSelecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoRequesting, setAutoRequesting] = useState(false);
   
   const fsSupport = checkFileSystemSupport();
 
@@ -37,22 +41,54 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
     }
   };
 
-  const handleGrantPermission = async () => {
+  const handleGrantPermission = useCallback(async () => {
+    if (isSelecting || autoRequesting) return;
+    
     setIsSelecting(true);
+    setAutoRequesting(true);
     setError(null);
     try {
       const success = await requestStoredPermission();
       if (success) {
         onComplete();
       } else {
-        setError('Permission was denied. Please try again.');
+        setError('Permission was denied. Please tap the button to try again.');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to request permission');
     } finally {
       setIsSelecting(false);
+      setAutoRequesting(false);
     }
-  };
+  }, [isSelecting, autoRequesting, onComplete]);
+
+  // Auto-request permission on first user interaction for returning users
+  useEffect(() => {
+    if (vaultAccess.status !== 'permission-needed') return;
+    
+    const handleFirstInteraction = () => {
+      // Remove listeners immediately to prevent multiple calls
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+      
+      // Small delay to let the UI settle
+      setTimeout(() => {
+        handleGrantPermission();
+      }, 100);
+    };
+
+    // Listen for any user interaction
+    document.addEventListener('click', handleFirstInteraction, { once: true });
+    document.addEventListener('touchstart', handleFirstInteraction, { once: true });
+    document.addEventListener('keydown', handleFirstInteraction, { once: true });
+
+    return () => {
+      document.removeEventListener('click', handleFirstInteraction);
+      document.removeEventListener('touchstart', handleFirstInteraction);
+      document.removeEventListener('keydown', handleFirstInteraction);
+    };
+  }, [vaultAccess.status, handleGrantPermission]);
 
   // Browser not supported
   if (!fsSupport.isFullySupported) {
@@ -72,53 +108,60 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
     );
   }
 
-  // Permission needed for existing folder
+  // Permission needed for existing folder - minimal UI that auto-requests on interaction
   if (vaultAccess.status === 'permission-needed') {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full p-6">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FolderOpen className="h-8 w-8 text-yellow-400" />
+        <Card className="max-w-sm w-full p-5">
+          {/* Compact header */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-blue-900/40 rounded-full flex items-center justify-center flex-shrink-0">
+              {isSelecting ? (
+                <RefreshCw className="h-5 w-5 text-blue-400 animate-spin" />
+              ) : (
+                <Unlock className="h-5 w-5 text-blue-400" />
+              )}
             </div>
-            <h1 className="text-2xl font-bold text-gray-100 mb-2">Permission Required</h1>
-            <p className="text-gray-400">
-              Goal Tracker needs permission to access your goals folder again.
-            </p>
-          </div>
-
-          <div className="bg-gray-800 rounded-lg p-4 mb-6">
-            <p className="text-sm text-gray-300 mb-1">Previously selected folder:</p>
-            <p className="text-lg font-medium text-white">{vaultAccess.folderName}</p>
+            <div>
+              <h1 className="text-base font-semibold text-gray-100">
+                {isSelecting ? 'Connecting...' : 'Tap to Continue'}
+              </h1>
+              <p className="text-xs text-gray-500">{vaultAccess.folderName}</p>
+            </div>
           </div>
 
           {error && (
-            <div className="bg-red-900/30 border border-red-700 rounded-lg p-3 mb-4">
-              <p className="text-sm text-red-300">{error}</p>
+            <div className="bg-red-900/30 border border-red-700 rounded-lg p-2 mb-3">
+              <p className="text-xs text-red-300">{error}</p>
             </div>
           )}
 
-          <Button 
-            onClick={handleGrantPermission}
-            variant="primary"
-            size="lg"
-            disabled={isSelecting}
-            className="w-full"
-          >
-            {isSelecting ? (
-              <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-            ) : (
-              <CheckCircle className="h-5 w-5 mr-2" />
-            )}
-            Grant Access
-          </Button>
+          {!isSelecting && (
+            <>
+              <Button 
+                onClick={handleGrantPermission}
+                variant="primary"
+                size="sm"
+                className="w-full"
+              >
+                <CheckCircle className="h-4 w-4 mr-1.5" />
+                Grant Access
+              </Button>
 
-          <button 
-            onClick={handleSelectFolder}
-            className="w-full mt-3 text-sm text-gray-400 hover:text-gray-300"
-          >
-            Or select a different folder
-          </button>
+              <button 
+                onClick={handleSelectFolder}
+                className="w-full mt-2 text-xs text-gray-500 hover:text-gray-400"
+              >
+                Select different folder
+              </button>
+            </>
+          )}
+
+          {isSelecting && (
+            <p className="text-xs text-gray-500 text-center">
+              Please allow access when prompted...
+            </p>
+          )}
         </Card>
       </div>
     );
