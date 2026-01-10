@@ -181,10 +181,14 @@ export function getMonthDayCount(year: number, month: number): number {
 }
 
 /**
- * Get the first day of the week for a month (0 = Sunday, 6 = Saturday)
+ * Get the first day of the week for a month (0 = Monday, 6 = Sunday)
+ * Returns Monday-based offset for calendar grid alignment
  */
 export function getFirstDayOfMonth(year: number, month: number): number {
-  return new Date(year, month, 1).getDay();
+  const day = new Date(year, month, 1).getDay();
+  // Convert from Sunday-based (0=Sun) to Monday-based (0=Mon)
+  // Sunday (0) -> 6, Monday (1) -> 0, Tuesday (2) -> 1, etc.
+  return day === 0 ? 6 : day - 1;
 }
 
 /**
@@ -214,10 +218,11 @@ export function getMonthName(month: number, format: 'long' | 'short' = 'long'): 
 }
 
 /**
- * Get day name
+ * Get day name (Monday-based: 0=Mon, 1=Tue, ..., 6=Sun)
  */
 export function getDayName(dayIndex: number, format: 'long' | 'short' | 'narrow' = 'short'): string {
-  const date = new Date(2000, 0, 2 + dayIndex); // Jan 2, 2000 was a Sunday
+  // Jan 3, 2000 was a Monday, so adding dayIndex gives Mon-Sun
+  const date = new Date(2000, 0, 3 + dayIndex);
   return date.toLocaleDateString('en-US', { weekday: format });
 }
 

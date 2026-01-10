@@ -15,7 +15,7 @@ interface CalendarGridProps {
   onWeekClick: (week: CalendarWeek) => void;
 }
 
-const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6]; // Sunday to Saturday
+const WEEKDAYS = [1, 2, 3, 4, 5, 6, 0]; // Monday to Sunday (ISO week standard)
 
 export function CalendarGrid({
   calendarMonth,
@@ -35,12 +35,12 @@ export function CalendarGrid({
         <div className="text-center text-xs font-medium text-gray-600 py-2">
           Wk
         </div>
-        {WEEKDAYS.map((dayIndex) => (
+        {WEEKDAYS.map((_, index) => (
           <div
-            key={dayIndex}
+            key={index}
             className="text-center text-xs font-medium text-gray-500 py-2"
           >
-            {getDayName(dayIndex, 'narrow')}
+            {getDayName(index, 'narrow')}
           </div>
         ))}
       </div>
