@@ -101,20 +101,20 @@ export function SettingsModal({ isOpen, onClose, onVaultPathChange, onFolderSele
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Settings">
-      <div className="space-y-6">
+      <div className="space-y-4">
         
         {/* Theme Customization Section */}
-        <Card className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Palette className="h-5 w-5 text-accent-secondary" />
-            <h3 className="text-lg font-semibold text-text-primary">Appearance</h3>
+        <Card className="p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <Palette className="h-4 w-4 text-accent-secondary" />
+            <h3 className="text-base font-semibold text-text-primary">Appearance</h3>
           </div>
           
           {isEditingTheme ? (
             <CustomThemeEditor onClose={() => setIsEditingTheme(false)} />
           ) : (
             <>
-              <p className="text-sm text-text-muted mb-4">
+              <p className="text-xs text-text-muted mb-3">
                 Choose a theme or create your own custom color scheme.
               </p>
               <ThemeSelector onCreateCustom={() => setIsEditingTheme(true)} />
@@ -124,54 +124,53 @@ export function SettingsModal({ isOpen, onClose, onVaultPathChange, onFolderSele
 
         {/* Native File System Mode (PWA/Production) */}
         {storageMode === 'native-fs' && (
-          <Card className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Folder className="h-5 w-5 text-purple-400" />
-              <h3 className="text-lg font-semibold text-gray-100">Goals Folder</h3>
+          <Card className="p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Folder className="h-4 w-4 text-purple-400" />
+              <h3 className="text-base font-semibold text-gray-100">Goals Folder</h3>
             </div>
             
-            <p className="text-sm text-gray-400 mb-4">
-              Select the folder containing your goal markdown files. This is typically your 
-              Obsidian vault's Goals directory.
+            <p className="text-xs text-gray-400 mb-3">
+              Select the folder containing your goal markdown files.
             </p>
 
             {/* Current folder status */}
             {storageState?.vaultAccess && (
-              <div className="mb-4">
+              <div className="mb-3">
                 {storageState.vaultAccess.status === 'ready' && (
-                  <div className="flex items-center gap-2 p-3 bg-green-900/30 border border-green-700 rounded-lg">
-                    <CheckCircle className="h-5 w-5 text-green-400" />
+                  <div className="flex items-center gap-2 p-2 bg-green-900/30 border border-green-700 rounded-lg">
+                    <CheckCircle className="h-4 w-4 text-green-400" />
                     <div>
-                      <p className="text-sm font-medium text-green-300">Connected</p>
+                      <p className="text-xs font-medium text-green-300">Connected</p>
                       <p className="text-xs text-green-400">{storageState.vaultAccess.folderName}</p>
                     </div>
                   </div>
                 )}
                 
                 {storageState.vaultAccess.status === 'permission-needed' && (
-                  <div className="flex items-center gap-2 p-3 bg-yellow-900/30 border border-yellow-700 rounded-lg">
-                    <AlertCircle className="h-5 w-5 text-yellow-400" />
+                  <div className="flex items-center gap-2 p-2 bg-yellow-900/30 border border-yellow-700 rounded-lg">
+                    <AlertCircle className="h-4 w-4 text-yellow-400" />
                     <div>
-                      <p className="text-sm font-medium text-yellow-300">Permission Required</p>
+                      <p className="text-xs font-medium text-yellow-300">Permission Required</p>
                       <p className="text-xs text-yellow-400">
-                        Tap "Grant Access" to reconnect to: {storageState.vaultAccess.folderName}
+                        Tap "Grant Access" to reconnect
                       </p>
                     </div>
                   </div>
                 )}
                 
                 {storageState.vaultAccess.status === 'not-configured' && (
-                  <div className="flex items-center gap-2 p-3 bg-gray-800 border border-gray-600 rounded-lg">
-                    <FolderOpen className="h-5 w-5 text-gray-400" />
-                    <p className="text-sm text-gray-400">No folder selected</p>
+                  <div className="flex items-center gap-2 p-2 bg-gray-800 border border-gray-600 rounded-lg">
+                    <FolderOpen className="h-4 w-4 text-gray-400" />
+                    <p className="text-xs text-gray-400">No folder selected</p>
                   </div>
                 )}
                 
                 {storageState.vaultAccess.status === 'error' && (
-                  <div className="flex items-center gap-2 p-3 bg-red-900/30 border border-red-700 rounded-lg">
-                    <AlertCircle className="h-5 w-5 text-red-400" />
+                  <div className="flex items-center gap-2 p-2 bg-red-900/30 border border-red-700 rounded-lg">
+                    <AlertCircle className="h-4 w-4 text-red-400" />
                     <div>
-                      <p className="text-sm font-medium text-red-300">Error</p>
+                      <p className="text-xs font-medium text-red-300">Error</p>
                       <p className="text-xs text-red-400">{storageState.vaultAccess.error}</p>
                     </div>
                   </div>
@@ -203,18 +202,18 @@ export function SettingsModal({ isOpen, onClose, onVaultPathChange, onFolderSele
 
         {/* Development Mode - Text Path Input */}
         {storageMode === 'vite' && (
-          <Card className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <FolderOpen className="h-5 w-5 text-blue-400" />
-              <h3 className="text-lg font-semibold text-gray-100">Goals Vault Path</h3>
-              <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded">Dev Mode</span>
+          <Card className="p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <FolderOpen className="h-4 w-4 text-blue-400" />
+              <h3 className="text-base font-semibold text-gray-100">Goals Vault Path</h3>
+              <span className="text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded">Dev</span>
             </div>
             
-            <p className="text-sm text-gray-400 mb-4">
-              Set the path to your goals folder. This is used by the Vite dev server.
+            <p className="text-xs text-gray-400 mb-3">
+              Set the path to your goals folder for the Vite dev server.
             </p>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div>
                 <label htmlFor="vault-path" className="block text-sm font-medium text-gray-300 mb-1">
                   Vault Path

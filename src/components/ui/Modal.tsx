@@ -62,8 +62,10 @@ export function Modal({
       <div
         className={`
           relative w-full ${sizeStyles[size]}
+          max-h-[80vh] sm:max-h-[85vh]
           bg-bg-card rounded-xl shadow-2xl
           animate-in fade-in zoom-in-95 duration-200
+          flex flex-col
         `}
         role="dialog"
         aria-modal="true"
@@ -71,8 +73,8 @@ export function Modal({
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border-primary">
-            <h2 id="modal-title" className="text-lg font-semibold text-text-primary">
+          <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-border-primary flex-shrink-0">
+            <h2 id="modal-title" className="text-base sm:text-lg font-semibold text-text-primary">
               {title}
             </h2>
             <button
@@ -86,7 +88,7 @@ export function Modal({
         )}
         
         {/* Body */}
-        <div className="px-6 py-4">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 overflow-y-auto flex-1">
           {children}
         </div>
       </div>
