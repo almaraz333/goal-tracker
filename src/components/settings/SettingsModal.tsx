@@ -17,7 +17,6 @@ import {
   getStoredVaultPath, 
   setStoredVaultPath, 
   DEFAULT_VAULT_PATH,
-  getStoragePreference,
   setStoragePreference,
   type StoragePreference,
 } from '@/utils/settings.utils';
@@ -54,7 +53,6 @@ export function SettingsModal({ isOpen, onClose, onVaultPathChange, onFolderSele
   // Storage mode switching state
   const [showStorageWarning, setShowStorageWarning] = useState(false);
   const [pendingStorageMode, setPendingStorageMode] = useState<StoragePreference | null>(null);
-  const currentStoragePreference = getStoragePreference();
   
   const storageMode = getStorageMode();
   const fsSupport = checkFileSystemSupport();
