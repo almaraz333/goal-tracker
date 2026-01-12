@@ -338,7 +338,7 @@ export async function fetchGoalsFromFiles(): Promise<Goal[]> {
 /**
  * Serialize a Goal object back to YAML frontmatter string
  */
-function serializeFrontmatter(goal: Goal): string {
+export function serializeFrontmatter(goal: Goal): string {
   const lines: string[] = [];
   
   lines.push(`type: ${goal.type}`);
@@ -422,6 +422,24 @@ function serializeFrontmatter(goal: Goal): string {
   }
 
   return lines.join('\n');
+}
+
+/**
+ * Convert a Goal object to full markdown content (frontmatter + body)
+ * Used when creating new goals or saving goals to IndexedDB
+ */
+export function goalToMarkdown(goal: Goal, body?: string): string {
+  const frontmatter = serializeFrontmatter(goal);
+  const goalBody = body ?? goal.description ?? '';
+  
+  return `---
+${frontmatter}
+---
+
+# ${goal.title}
+
+${goalBody}
+`;
 }
 
 // Debounce map for save operations (one timer per goal)

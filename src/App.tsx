@@ -3,11 +3,13 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { Plus } from 'lucide-react';
 import { MainLayout } from '@/layouts';
 import { CalendarPage, DayDetailPage } from '@/pages';
 import { LoadingOverlay, Card, Button } from '@/components/ui';
 import { PWAUpdatePrompt } from '@/components/pwa/PWAUpdatePrompt';
-import { VaultSetupScreen } from '@/components/vault';
+import { VaultSetupScreen, StorageModeSelector } from '@/components/vault';
+import { GoalCreationModal, GoalEditModal } from '@/components/goals';
 import { ErrorBoundary } from '@/components/errors';
 import { useAppStore } from '@/store';
 import { buildCalendarDay, formatDateToISO } from '@/utils';
@@ -15,11 +17,14 @@ import {
   initializeStorage, 
   loadGoals, 
   requiresUserAction,
+  isInAppStorageMode,
   type StorageState 
 } from '@/services/storage.service';
+import { getUniqueCategoriesFromGoals } from '@/services/indexedDbStorage.service';
 import { goalFiles } from 'virtual:goals';
 import { mockGoals } from '@/data';
 import { env } from '@/config';
+import type { Goal } from '@/types';
 
 export function App() {
   const {
@@ -36,10 +41,28 @@ export function App() {
     toggleDailySubtask,
     toggleWeeklySubtask,
     updateMonthlyProgress,
+    updateGoal,
   } = useAppStore();
 
   // Storage state for native FS mode
   const [storageState, setStorageState] = useState<StorageState | null>(null);
+  
+  // Goal creation/edit modals
+  const [showCreateGoal, setShowCreateGoal] = useState(false);
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [existingCategories, setExistingCategories] = useState<string[]>([]);
+
+  // Check if we're in in-app storage mode
+  const canCreateGoals = isInAppStorageMode();
+
+  // Load categories for goal creation/editing
+  useEffect(() => {
+    if (canCreateGoals) {
+      getUniqueCategoriesFromGoals()
+        .then(setExistingCategories)
+        .catch(console.error);
+    }
+  }, [canCreateGoals, goals]);
 
   // Load initial data
   useEffect(() => {
@@ -107,6 +130,45 @@ export function App() {
     }
   }, [setGoals, setLoading, setError]);
 
+  // Handle storage mode selected (first-time setup)
+  const handleStorageModeSelected = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Re-initialize storage with the new preference
+      const state = await initializeStorage(goalFiles);
+      setStorageState(state);
+      
+      // If in-app mode, storage is ready immediately
+      // If external folder mode, may need folder selection
+      if (state.isReady) {
+        const loadedGoals = await loadGoals();
+        setGoals(loadedGoals);
+      }
+    } catch (err) {
+      console.error('Failed to initialize after mode selection:', err);
+      setError(err instanceof Error ? err.message : 'Failed to initialize storage');
+    } finally {
+      setLoading(false);
+    }
+  }, [setGoals, setLoading, setError]);
+
+  // Handle goal created
+  const handleGoalCreated = useCallback((goal: Goal) => {
+    setGoals([...goals, goal]);
+  }, [goals, setGoals]);
+
+  // Handle goal updated (from edit modal)
+  const handleGoalUpdated = useCallback((updatedGoal: Goal) => {
+    updateGoal(updatedGoal);
+    setEditingGoal(null);
+  }, [updateGoal]);
+
+  // Handle goal deleted
+  const handleGoalDeleted = useCallback((goalId: string) => {
+    setGoals(goals.filter(g => g.id !== goalId));
+    setEditingGoal(null);
+  }, [goals, setGoals]);
+
   // Handle day selection
   const handleDaySelect = useCallback((date: Date) => {
     setSelectedDate(date);
@@ -154,6 +216,13 @@ export function App() {
       <MainLayout>
         <LoadingOverlay message="Loading your goals..." />
       </MainLayout>
+    );
+  }
+
+  // Storage mode selection required (first-time setup)
+  if (storageState?.needsStorageChoice) {
+    return (
+      <StorageModeSelector onComplete={handleStorageModeSelected} />
     );
   }
 
@@ -209,6 +278,37 @@ export function App() {
             onToggleWeeklySubtask={handleToggleWeeklySubtask}
             onIncrementMonthlyProgress={handleIncrementMonthlyProgress}
             onDecrementMonthlyProgress={handleDecrementMonthlyProgress}
+          />
+        )}
+
+        {/* Floating Action Button for creating goals (in-app mode only) */}
+        {canCreateGoals && (
+          <button
+            onClick={() => setShowCreateGoal(true)}
+            className="fixed bottom-20 right-4 w-14 h-14 bg-accent-primary hover:bg-accent-primary/90 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-40"
+            aria-label="Create new goal"
+          >
+            <Plus className="h-6 w-6" />
+          </button>
+        )}
+
+        {/* Goal Creation Modal */}
+        <GoalCreationModal
+          isOpen={showCreateGoal}
+          onClose={() => setShowCreateGoal(false)}
+          onGoalCreated={handleGoalCreated}
+          existingCategories={existingCategories}
+        />
+
+        {/* Goal Edit Modal */}
+        {editingGoal && (
+          <GoalEditModal
+            isOpen={!!editingGoal}
+            onClose={() => setEditingGoal(null)}
+            goal={editingGoal}
+            onGoalUpdated={handleGoalUpdated}
+            onGoalDeleted={handleGoalDeleted}
+            existingCategories={existingCategories}
           />
         )}
       </MainLayout>

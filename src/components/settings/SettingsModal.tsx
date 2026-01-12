@@ -9,11 +9,18 @@
  */
 
 import { useState, useMemo, useEffect } from 'react';
-import { Settings, FolderOpen, X, Save, CheckCircle, AlertCircle, Folder, Palette } from 'lucide-react';
+import { Settings, FolderOpen, X, Save, CheckCircle, AlertCircle, Folder, Palette, HardDrive, Smartphone, AlertTriangle } from 'lucide-react';
 import { Button, Modal, Card } from '@/components/ui';
 import { ThemeSelector } from './ThemeSelector';
 import { CustomThemeEditor } from './CustomThemeEditor';
-import { getStoredVaultPath, setStoredVaultPath, DEFAULT_VAULT_PATH } from '@/utils/settings.utils';
+import { 
+  getStoredVaultPath, 
+  setStoredVaultPath, 
+  DEFAULT_VAULT_PATH,
+  getStoragePreference,
+  setStoragePreference,
+  type StoragePreference,
+} from '@/utils/settings.utils';
 import { 
   getStorageMode, 
   getStorageState, 
@@ -43,6 +50,11 @@ export function SettingsModal({ isOpen, onClose, onVaultPathChange, onFolderSele
   // Storage state for native FS mode
   const [storageState, setStorageState] = useState<StorageState | null>(null);
   const [isSelectingFolder, setIsSelectingFolder] = useState(false);
+  
+  // Storage mode switching state
+  const [showStorageWarning, setShowStorageWarning] = useState(false);
+  const [pendingStorageMode, setPendingStorageMode] = useState<StoragePreference | null>(null);
+  const currentStoragePreference = getStoragePreference();
   
   const storageMode = getStorageMode();
   const fsSupport = checkFileSystemSupport();
@@ -264,14 +276,120 @@ export function SettingsModal({ isOpen, onClose, onVaultPathChange, onFolderSele
           </Card>
         )}
 
-        {/* Storage Mode Info */}
-        <Card className="p-4 bg-gray-800/50">
-          <p className="text-xs text-gray-500">
-            Storage Mode: <span className="text-gray-400">{storageMode}</span>
-            {storageMode === 'vite' && ' (Development server)'}
-            {storageMode === 'native-fs' && ' (File System Access API)'}
-            {storageMode === 'none' && ' (Not available)'}
+        {/* Storage Mode Section */}
+        <Card className="p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <HardDrive className="h-4 w-4 text-accent-secondary" />
+            <h3 className="text-base font-semibold text-text-primary">Storage Mode</h3>
+            {storageMode === 'vite' && (
+              <span className="text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded">Dev</span>
+            )}
+          </div>
+          
+          <p className="text-xs text-text-muted mb-3">
+            {storageMode === 'vite' 
+              ? 'Development mode uses local files. Storage switching is available in production PWA.'
+              : 'Choose where to store your goals data.'
+            }
           </p>
+
+          {/* Current mode indicator */}
+          <div className="flex items-center gap-2 p-2 bg-bg-tertiary rounded-lg mb-3">
+            {storageMode === 'vite' ? (
+              <>
+                <FolderOpen className="h-4 w-4 text-blue-400" />
+                <span className="text-sm text-text-primary">Development (Vite)</span>
+              </>
+            ) : storageMode === 'indexed-db' ? (
+              <>
+                <Smartphone className="h-4 w-4 text-status-success" />
+                <span className="text-sm text-text-primary">In-App Storage</span>
+              </>
+            ) : storageMode === 'native-fs' ? (
+              <>
+                <FolderOpen className="h-4 w-4 text-accent-primary" />
+                <span className="text-sm text-text-primary">External Folder</span>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="h-4 w-4 text-status-warning" />
+                <span className="text-sm text-text-primary">Not configured</span>
+              </>
+            )}
+          </div>
+
+          {/* Switch mode buttons - only in production */}
+          {storageMode !== 'vite' && (
+            <>
+              {!showStorageWarning ? (
+                <div className="flex gap-2">
+                  {storageMode !== 'indexed-db' && (
+                    <Button
+                      onClick={() => {
+                        setPendingStorageMode('in-app');
+                        setShowStorageWarning(true);
+                      }}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      <Smartphone className="h-4 w-4 mr-1" />
+                      Switch to In-App
+                    </Button>
+                  )}
+                  {storageMode !== 'native-fs' && fsSupport.isFullySupported && (
+                    <Button
+                      onClick={() => {
+                        setPendingStorageMode('external-folder');
+                        setShowStorageWarning(true);
+                      }}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      <FolderOpen className="h-4 w-4 mr-1" />
+                      Switch to External
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <div className="p-3 bg-status-danger-bg border border-status-danger-border rounded-lg">
+                  <div className="flex items-start gap-2 mb-3">
+                    <AlertTriangle className="h-4 w-4 text-status-danger mt-0.5 shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-status-danger">Warning</p>
+                      <p className="text-xs text-text-secondary mt-1">
+                        Switching storage modes will not transfer your existing goals. 
+                        You will start fresh with the new storage mode.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => {
+                        if (pendingStorageMode) {
+                          setStoragePreference(pendingStorageMode);
+                          window.location.reload();
+                        }
+                      }}
+                      variant="primary"
+                      size="sm"
+                    >
+                      Switch Anyway
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setShowStorageWarning(false);
+                        setPendingStorageMode(null);
+                      }}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </Card>
 
         {/* Close button */}

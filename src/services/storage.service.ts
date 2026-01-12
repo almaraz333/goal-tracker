@@ -3,7 +3,8 @@
  * 
  * Unified interface for goal storage that works across different environments:
  * - Development: Uses Vite dev server middleware (reads from bundled files, writes via API)
- * - Production PWA: Uses File System Access API for direct file access
+ * - Production PWA (External Folder): Uses File System Access API for direct file access
+ * - Production PWA (In-App): Uses IndexedDB for storage within the app
  * 
  * This adapter automatically detects the environment and uses the appropriate backend.
  */
@@ -23,11 +24,20 @@ import {
   getRawGoalContent as getNativeFSContent,
   saveRawGoalContent as saveNativeFSContent,
 } from './nativeFileSystem.service';
+import {
+  initializeGoalsDB,
+  loadGoalsFromIndexedDB,
+  saveGoalToIndexedDB,
+  deleteGoalFromIndexedDB,
+  getGoalContentFromIndexedDB,
+  saveGoalContentToIndexedDB,
+} from './indexedDbStorage.service';
+import { getStoragePreference, hasChosenStorageMode } from '@/utils/settings.utils';
 
 /**
  * Storage mode - which backend we're using
  */
-export type StorageMode = 'vite' | 'native-fs' | 'none';
+export type StorageMode = 'vite' | 'native-fs' | 'indexed-db' | 'none';
 
 /**
  * Storage state for the application
@@ -37,28 +47,60 @@ export interface StorageState {
   isReady: boolean;
   vaultAccess?: VaultAccessState;
   error?: string;
+  needsStorageChoice?: boolean;
 }
 
 // Current storage mode
 let currentMode: StorageMode = 'none';
 
 /**
- * Determine which storage mode to use
+ * Determine which storage mode to use based on environment and user preference
  */
 export function getStorageMode(): StorageMode {
+  return currentMode;
+}
+
+/**
+ * Determine the storage mode that should be used
+ * This is called during initialization to figure out the mode
+ */
+export function determineStorageMode(): StorageMode {
   // Development mode: use Vite middleware
   if (import.meta.env.DEV) {
     return 'vite';
   }
   
-  // Production: check if File System Access API is supported
-  const support = checkFileSystemSupport();
-  if (support.isFullySupported) {
-    return 'native-fs';
+  // Check user's storage preference
+  const preference = getStoragePreference();
+  
+  if (preference === 'in-app') {
+    return 'indexed-db';
   }
   
-  // Fallback: no storage available (would need to implement IndexedDB fallback)
+  if (preference === 'external-folder') {
+    // Check if File System Access API is supported
+    const support = checkFileSystemSupport();
+    if (support.isFullySupported) {
+      return 'native-fs';
+    }
+    // If not supported, fall back to none (should show error)
+    return 'none';
+  }
+  
+  // No preference set - will prompt user to choose
   return 'none';
+}
+
+/**
+ * Check if user needs to make initial storage choice
+ */
+export function needsStorageChoice(): boolean {
+  // In dev mode, never need to choose
+  if (import.meta.env.DEV) {
+    return false;
+  }
+  
+  return !hasChosenStorageMode();
 }
 
 /**
@@ -66,7 +108,17 @@ export function getStorageMode(): StorageMode {
  * Returns the storage state after initialization
  */
 export async function initializeStorage(goalFiles?: Array<{ path: string; category: string; content: string }>): Promise<StorageState> {
-  currentMode = getStorageMode();
+  // Check if user needs to make a choice first
+  if (needsStorageChoice()) {
+    currentMode = 'none';
+    return {
+      mode: 'none',
+      isReady: false,
+      needsStorageChoice: true,
+    };
+  }
+  
+  currentMode = determineStorageMode();
   
   if (currentMode === 'vite') {
     // Register files from Vite plugin
@@ -77,6 +129,22 @@ export async function initializeStorage(goalFiles?: Array<{ path: string; catego
       mode: 'vite',
       isReady: true,
     };
+  }
+  
+  if (currentMode === 'indexed-db') {
+    try {
+      await initializeGoalsDB();
+      return {
+        mode: 'indexed-db',
+        isReady: true,
+      };
+    } catch (error) {
+      return {
+        mode: 'indexed-db',
+        isReady: false,
+        error: error instanceof Error ? error.message : 'Failed to initialize IndexedDB',
+      };
+    }
   }
   
   if (currentMode === 'native-fs') {
@@ -93,8 +161,15 @@ export async function initializeStorage(goalFiles?: Array<{ path: string; catego
   return {
     mode: 'none',
     isReady: false,
-    error: 'No storage method available. File System Access API is not supported in this browser.',
+    error: 'No storage method available. Please select a storage mode in settings.',
   };
+}
+
+/**
+ * Re-initialize storage after mode change
+ */
+export async function reinitializeStorage(): Promise<StorageState> {
+  return initializeStorage();
 }
 
 /**
@@ -105,12 +180,12 @@ export async function loadGoals(): Promise<Goal[]> {
     return loadGoalsFromFiles();
   }
   
+  if (currentMode === 'indexed-db') {
+    return loadGoalsFromIndexedDB();
+  }
+  
   if (currentMode === 'native-fs') {
     const goals = await loadGoalsFromNativeFS();
-    
-    // Cache file contents for saving later
-    // Note: This is handled within loadGoalsFromNativeFS now
-    
     return goals;
   }
   
@@ -126,12 +201,33 @@ export function saveGoal(goal: Goal): void {
     return;
   }
   
+  if (currentMode === 'indexed-db') {
+    // IndexedDB save is async, but we fire and forget for consistency
+    saveGoalToIndexedDB(goal).catch(err => {
+      console.error('Failed to save goal to IndexedDB:', err);
+    });
+    return;
+  }
+  
   if (currentMode === 'native-fs') {
     saveGoalToNativeFSDebounced(goal);
     return;
   }
   
   console.warn('No storage backend available, goal not saved');
+}
+
+/**
+ * Delete a goal from storage
+ */
+export async function deleteGoal(filePath: string): Promise<void> {
+  if (currentMode === 'indexed-db') {
+    await deleteGoalFromIndexedDB(filePath);
+    return;
+  }
+  
+  // For other modes, deletion is not supported through this service
+  console.warn('Goal deletion is only available in in-app storage mode');
 }
 
 /**
@@ -174,6 +270,10 @@ export async function getStorageState(): Promise<StorageState> {
     return { mode: 'vite', isReady: true };
   }
   
+  if (currentMode === 'indexed-db') {
+    return { mode: 'indexed-db', isReady: true };
+  }
+  
   if (currentMode === 'native-fs') {
     const vaultAccess = await getVaultAccessState();
     return {
@@ -183,17 +283,28 @@ export async function getStorageState(): Promise<StorageState> {
     };
   }
   
-  return { mode: 'none', isReady: false };
+  return { 
+    mode: 'none', 
+    isReady: false,
+    needsStorageChoice: needsStorageChoice(),
+  };
 }
 
 /**
  * Check if storage requires user action (folder selection or permission)
  */
 export function requiresUserAction(state: StorageState): boolean {
+  // Needs storage choice
+  if (state.needsStorageChoice) {
+    return true;
+  }
+  
+  // Native FS needs folder selection or permission
   if (state.mode === 'native-fs' && state.vaultAccess) {
     return state.vaultAccess.status === 'not-configured' || 
            state.vaultAccess.status === 'permission-needed';
   }
+  
   return false;
 }
 
@@ -209,19 +320,49 @@ export function getRawGoalContent(filePath: string): string | null {
     return getNativeFSContent(filePath);
   }
   
+  // For indexed-db, we need to load async - return null and handle differently
   return null;
+}
+
+/**
+ * Get raw goal content async (works for all modes)
+ */
+export async function getRawGoalContentAsync(filePath: string): Promise<string | null> {
+  if (currentMode === 'indexed-db') {
+    return getGoalContentFromIndexedDB(filePath);
+  }
+  
+  return getRawGoalContent(filePath);
 }
 
 /**
  * Save raw goal content to the appropriate storage
  */
-export async function saveRawGoalContent(filePath: string, content: string): Promise<void> {
+export async function saveRawGoalContent(filePath: string, content: string, category?: string): Promise<void> {
+  if (currentMode === 'indexed-db') {
+    return saveGoalContentToIndexedDB(filePath, content, category ?? 'Uncategorized');
+  }
+  
   if (currentMode === 'native-fs') {
     return saveNativeFSContent(filePath, content);
   }
   
   // In Vite mode, we can't save raw content (would need a dev server endpoint)
   throw new Error('Saving raw content is only available in PWA mode');
+}
+
+/**
+ * Check if we're in in-app storage mode (allows goal creation)
+ */
+export function isInAppStorageMode(): boolean {
+  return currentMode === 'indexed-db';
+}
+
+/**
+ * Check if we're in external folder mode (allows raw markdown editing)
+ */
+export function isExternalFolderMode(): boolean {
+  return currentMode === 'native-fs';
 }
 
 /**

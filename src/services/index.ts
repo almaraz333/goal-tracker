@@ -4,6 +4,8 @@ export {
   frontmatterToGoal, 
   registerGoalFiles, 
   loadGoalsFromFiles,
+  goalToMarkdown,
+  serializeFrontmatter,
 } from './fileSystem.service';
 
 export * from './handleStorage.service';
@@ -23,17 +25,24 @@ export {
 
 // Export storage adapter as the primary mechanism
 export { 
-  saveGoal, 
+  saveGoal,
+  deleteGoal,
   loadGoals, 
-  initializeStorage, 
-  getStorageMode, 
+  initializeStorage,
+  reinitializeStorage,
+  getStorageMode,
+  determineStorageMode,
+  needsStorageChoice,
   getStorageState,
   requestFolderAccess,
   requestStoredPermission,
   clearFolderAccess,
   requiresUserAction,
   getRawGoalContent,
+  getRawGoalContentAsync,
   saveRawGoalContent,
+  isInAppStorageMode,
+  isExternalFolderMode,
   type StorageMode,
   type StorageState,
 } from './storage.service';

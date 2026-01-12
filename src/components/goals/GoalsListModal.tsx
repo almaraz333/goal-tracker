@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { Modal, Badge } from '@/components/ui';
 import { GoalDetailView } from './GoalDetailView';
+import { GoalEditModal } from './GoalEditModal';
+import { isInAppStorageMode } from '@/services';
 import type { Goal, GoalType } from '@/types';
 import { formatDateDisplay, parseISODate } from '@/utils';
 
@@ -25,7 +27,9 @@ interface GoalsListModalProps {
   onClose: () => void;
   goals: Goal[];
   goalType: GoalType;
-  onGoalUpdated?: () => void;
+  onGoalUpdated?: (goal: Goal) => void;
+  onGoalDeleted?: (goalId: string) => void;
+  existingCategories?: string[];
 }
 
 export function GoalsListModal({ 
@@ -33,9 +37,14 @@ export function GoalsListModal({
   onClose, 
   goals, 
   goalType,
-  onGoalUpdated 
+  onGoalUpdated,
+  onGoalDeleted,
+  existingCategories = [],
 }: GoalsListModalProps) {
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  
+  const inAppMode = isInAppStorageMode();
 
   // Filter goals by type and get all (including inactive for reference)
   const filteredGoals = useMemo(() => {
@@ -73,7 +82,13 @@ export function GoalsListModal({
   };
 
   const handleGoalClick = (goal: Goal) => {
-    setSelectedGoal(goal);
+    if (inAppMode) {
+      // In-app mode: use form-based edit modal
+      setEditingGoal(goal);
+    } else {
+      // External folder mode: show detail view with markdown editor
+      setSelectedGoal(goal);
+    }
   };
 
   const handleBackToList = () => {
@@ -82,10 +97,22 @@ export function GoalsListModal({
 
   const handleClose = () => {
     setSelectedGoal(null);
+    setEditingGoal(null);
     onClose();
   };
 
+  const handleGoalUpdated = (updatedGoal: Goal) => {
+    onGoalUpdated?.(updatedGoal);
+    setEditingGoal(null);
+  };
+
+  const handleGoalDeleted = (goalId: string) => {
+    onGoalDeleted?.(goalId);
+    setEditingGoal(null);
+  };
+
   return (
+    <>
     <Modal 
       isOpen={isOpen} 
       onClose={handleClose} 
@@ -97,7 +124,7 @@ export function GoalsListModal({
           <GoalDetailView 
             goal={selectedGoal} 
             onBack={handleBackToList}
-            onGoalUpdated={onGoalUpdated}
+            onGoalUpdated={() => onGoalUpdated?.(selectedGoal)}
           />
         ) : (
           <div className="space-y-4">
@@ -158,7 +185,10 @@ export function GoalsListModal({
                 </div>
                 <p className="text-text-muted">No {goalType} goals found</p>
                 <p className="text-xs text-text-muted mt-1">
-                  Create a new {goalType} goal in your Obsidian vault
+                  {inAppMode 
+                    ? `Create a new ${goalType} goal using the + button`
+                    : `Create a new ${goalType} goal in your Obsidian vault`
+                  }
                 </p>
               </div>
             )}
@@ -166,6 +196,19 @@ export function GoalsListModal({
         )}
       </div>
     </Modal>
+
+    {/* Edit Modal for in-app mode */}
+    {editingGoal && (
+      <GoalEditModal
+        isOpen={!!editingGoal}
+        onClose={() => setEditingGoal(null)}
+        goal={editingGoal}
+        onGoalUpdated={handleGoalUpdated}
+        onGoalDeleted={handleGoalDeleted}
+        existingCategories={existingCategories}
+      />
+    )}
+    </>
   );
 }
 

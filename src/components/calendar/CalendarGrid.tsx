@@ -77,7 +77,7 @@ export function CalendarGrid({
                 disabled={!hasWeeklyGoals}
               >
                 {weekComplete ? (
-                  <CheckCircle2 className="h-4 w-4" />
+                  <CheckCircle2 className={`h-4 w-4 ${isSelectedWeek ? 'text-text-inverse' : 'text-status-success'}`} />
                 ) : (
                   rowWeekNum
                 )}
