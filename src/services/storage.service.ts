@@ -39,15 +39,14 @@ import {
   getCapacitorVaultAccessState,
   loadGoalsFromCapacitorFS,
   saveGoalToCapacitorFSDebounced,
-  pickFolder as pickCapacitorFolder,
-  setVaultPath as setCapacitorVaultPath,
+  setVaultPathWithValidation,
   clearVaultPath as clearCapacitorVaultPath,
   getRawGoalContent as getCapacitorFSContent,
   saveRawGoalContent as saveCapacitorFSContent,
   requestStoragePermissions,
   flushPendingWrites as flushCapacitorWrites,
 } from './capacitorFileSystem.service';
-import { isNativePlatform, isIOS, getPlatformCapabilities } from './platform.service';
+import { isNativePlatform, isIOS, isAndroid, getPlatformCapabilities } from './platform.service';
 import { getStoragePreference, hasChosenStorageMode } from '@/utils/settings.utils';
 
 /**
@@ -303,7 +302,7 @@ export async function deleteGoal(filePath: string): Promise<void> {
 }
 
 /**
- * Request access to a goals folder (for native-fs or capacitor-fs mode)
+ * Request access to a goals folder (for native-fs mode on web)
  */
 export async function requestFolderAccess(): Promise<boolean> {
   if (currentMode === 'native-fs') {
@@ -311,16 +310,20 @@ export async function requestFolderAccess(): Promise<boolean> {
     return handle !== null;
   }
   
-  if (currentMode === 'capacitor-fs') {
-    const result = await pickCapacitorFolder();
-    if (result) {
-      await setCapacitorVaultPath(result.path, result.name);
-      return true;
-    }
-    return false;
+  // For capacitor-fs, use setExternalFolderPath instead
+  return false;
+}
+
+/**
+ * Set external folder path for Capacitor (Android only)
+ * Path should be relative to external storage, e.g. "Syncthing/Goals"
+ */
+export async function setExternalFolderPath(path: string): Promise<{ success: boolean; error?: string }> {
+  if (currentMode !== 'capacitor-fs' && !isAndroid()) {
+    return { success: false, error: 'External folder access is only supported on Android' };
   }
   
-  return false;
+  return setVaultPathWithValidation(path);
 }
 
 /**

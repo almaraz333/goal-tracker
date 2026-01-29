@@ -4,17 +4,21 @@
  * Provides file system operations for native platforms (iOS/Android)
  * using Capacitor's Filesystem plugin.
  * 
- * This service mirrors the functionality of nativeFileSystem.service.ts
- * but uses Capacitor APIs instead of the Web File System Access API.
+ * For Android external folder access:
+ * - User provides a path like "/storage/emulated/0/Syncthing/Goals"
+ * - We use Capacitor Filesystem with Directory.ExternalStorage
+ * 
+ * For iOS:
+ * - External folder access is NOT supported due to sandboxing
+ * - Users must use in-app storage (IndexedDB)
  */
 
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Preferences } from '@capacitor/preferences';
-import { FilePicker } from '@capawesome/capacitor-file-picker';
 import type { Goal } from '@/types';
 import type { VaultAccessState } from '@/types/fileSystem.types';
 import { parseFrontmatter, frontmatterToGoal, goalToMarkdown } from './fileSystem.service';
-import { isAndroid, isIOS } from './platform.service';
+import { isAndroid } from './platform.service';
 
 // Storage keys for Preferences
 const VAULT_PATH_KEY = 'capacitor_vault_path';
@@ -43,13 +47,11 @@ export function isCapacitorFilesystemAvailable(): boolean {
  */
 export async function requestStoragePermissions(): Promise<boolean> {
   if (!isAndroid()) {
-    // iOS handles permissions differently - through document picker
-    return true;
+    // iOS doesn't support external storage access
+    return false;
   }
   
   try {
-    // On Android 11+, we need to use SAF (Storage Access Framework)
-    // The FilePicker plugin handles this automatically
     const result = await Filesystem.checkPermissions();
     
     if (result.publicStorage !== 'granted') {
@@ -65,59 +67,67 @@ export async function requestStoragePermissions(): Promise<boolean> {
 }
 
 /**
- * Pick a folder using the native file picker
- * Returns the folder path that can be used with Capacitor Filesystem
+ * Validate and set the vault path
+ * The path should be relative to external storage root
+ * e.g., "Syncthing/Goals" or "Documents/Goals"
  */
-export async function pickFolder(): Promise<{ path: string; name: string } | null> {
+export async function setVaultPathWithValidation(path: string): Promise<{ success: boolean; error?: string }> {
+  if (!isAndroid()) {
+    return { success: false, error: 'External folder access is only supported on Android' };
+  }
+  
+  // Clean up the path
+  let cleanPath = path.trim();
+  
+  // Remove leading /storage/emulated/0/ if user included it
+  cleanPath = cleanPath.replace(/^\/storage\/emulated\/\d+\/?/, '');
+  // Remove leading slash
+  cleanPath = cleanPath.replace(/^\/+/, '');
+  // Remove trailing slash
+  cleanPath = cleanPath.replace(/\/+$/, '');
+  
+  if (!cleanPath) {
+    return { success: false, error: 'Please enter a valid folder path' };
+  }
+  
   try {
-    if (isAndroid()) {
-      // Use FilePicker to select a folder
-      const result = await FilePicker.pickFiles({
-        // On Android, we'll pick a file and extract the directory
-        // Unfortunately, direct folder picking is limited on Android
-        // So we guide users to select any file in their Goals folder
-        limit: 1,
-        readData: false,
-      });
-      
-      if (result.files.length > 0) {
-        const file = result.files[0];
-        // Extract directory path from file path
-        const filePath = file.path || '';
-        const dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
-        const dirName = dirPath.substring(dirPath.lastIndexOf('/') + 1);
-        
-        return { path: dirPath, name: dirName };
-      }
-      return null;
+    // Request permissions first
+    const hasPermission = await requestStoragePermissions();
+    if (!hasPermission) {
+      return { success: false, error: 'Storage permission denied. Please grant storage access in app settings.' };
     }
     
-    if (isIOS()) {
-      // On iOS, we use the document picker
-      // Files will be copied to the app's document directory
-      const result = await FilePicker.pickFiles({
-        limit: 1,
-        readData: false,
-      });
-      
-      if (result.files.length > 0) {
-        const file = result.files[0];
-        const filePath = file.path || '';
-        const dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
-        const dirName = dirPath.substring(dirPath.lastIndexOf('/') + 1);
-        
-        return { path: dirPath, name: dirName };
-      }
-      return null;
-    }
+    // Try to read the directory to verify it exists
+    await Filesystem.readdir({
+      path: cleanPath,
+      directory: Directory.ExternalStorage,
+    });
     
-    return null;
+    // Extract folder name from path
+    const folderName = cleanPath.split('/').pop() || 'Goals';
+    
+    // Save the path
+    await setVaultPath(cleanPath, folderName);
+    
+    return { success: true };
   } catch (error) {
-    if ((error as Error).message?.includes('canceled') || 
-        (error as Error).message?.includes('cancelled')) {
-      return null;
+    const errorMsg = (error as Error).message || 'Unknown error';
+    
+    if (errorMsg.includes('not exist') || errorMsg.includes('No such file')) {
+      return { 
+        success: false, 
+        error: `Folder not found: "${cleanPath}". Make sure the folder exists on your device.` 
+      };
     }
-    throw error;
+    
+    if (errorMsg.includes('permission') || errorMsg.includes('denied')) {
+      return { 
+        success: false, 
+        error: 'Permission denied. Please grant storage access in your device settings.' 
+      };
+    }
+    
+    return { success: false, error: `Failed to access folder: ${errorMsg}` };
   }
 }
 

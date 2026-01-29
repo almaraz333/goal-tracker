@@ -45,6 +45,7 @@ export {
   isExternalFolderMode,
   isCapacitorMode,
   flushPendingWrites,
+  setExternalFolderPath,
   type StorageMode,
   type StorageState,
 } from './storage.service';
@@ -66,10 +67,11 @@ export {
 
 // Capacitor file system exports (for direct access when needed)
 export {
-  pickFolder as pickCapacitorFolder,
   setVaultPath as setCapacitorVaultPath,
+  setVaultPathWithValidation,
   hasVaultConfigured as hasCapacitorVaultConfigured,
   requestStoragePermissions,
+  getVaultPath as getCapacitorVaultPath,
 } from './capacitorFileSystem.service';
 
 // Theme service exports
