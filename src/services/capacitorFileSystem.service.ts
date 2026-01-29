@@ -14,7 +14,6 @@
  */
 
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import { Preferences } from '@capacitor/preferences';
 import type { Goal } from '@/types';
 import type { VaultAccessState } from '@/types/fileSystem.types';
 import { parseFrontmatter, frontmatterToGoal, goalToMarkdown } from './fileSystem.service';
@@ -133,40 +132,61 @@ export async function setVaultPathWithValidation(path: string): Promise<{ succes
 
 /**
  * Set the vault path for external folder storage
+ * Uses localStorage for persistence (works on all platforms)
  */
 export async function setVaultPath(path: string, name: string): Promise<void> {
-  await Preferences.set({ key: VAULT_PATH_KEY, value: path });
-  await Preferences.set({ key: VAULT_NAME_KEY, value: name });
+  try {
+    localStorage.setItem(VAULT_PATH_KEY, path);
+    localStorage.setItem(VAULT_NAME_KEY, name);
+  } catch (e) {
+    console.warn('Failed to save vault path to localStorage:', e);
+  }
   currentVaultPath = path;
 }
 
 /**
  * Get the stored vault path
+ * Uses localStorage for persistence (works on all platforms)
  */
 export async function getVaultPath(): Promise<string | null> {
   if (currentVaultPath) {
     return currentVaultPath;
   }
   
-  const { value } = await Preferences.get({ key: VAULT_PATH_KEY });
-  currentVaultPath = value;
-  return value;
+  try {
+    const value = localStorage.getItem(VAULT_PATH_KEY);
+    currentVaultPath = value;
+    return value;
+  } catch (e) {
+    console.warn('Failed to get vault path from localStorage:', e);
+    return null;
+  }
 }
 
 /**
  * Get vault folder name
+ * Uses localStorage for persistence (works on all platforms)
  */
 export async function getVaultName(): Promise<string | null> {
-  const { value } = await Preferences.get({ key: VAULT_NAME_KEY });
-  return value;
+  try {
+    return localStorage.getItem(VAULT_NAME_KEY);
+  } catch (e) {
+    console.warn('Failed to get vault name from localStorage:', e);
+    return null;
+  }
 }
 
 /**
  * Clear the stored vault path
+ * Uses localStorage for persistence (works on all platforms)
  */
 export async function clearVaultPath(): Promise<void> {
-  await Preferences.remove({ key: VAULT_PATH_KEY });
-  await Preferences.remove({ key: VAULT_NAME_KEY });
+  try {
+    localStorage.removeItem(VAULT_PATH_KEY);
+    localStorage.removeItem(VAULT_NAME_KEY);
+  } catch (e) {
+    console.warn('Failed to clear vault path from localStorage:', e);
+  }
   currentVaultPath = null;
   fileContentCache.clear();
 }
