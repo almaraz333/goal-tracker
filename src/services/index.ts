@@ -43,9 +43,34 @@ export {
   saveRawGoalContent,
   isInAppStorageMode,
   isExternalFolderMode,
+  isCapacitorMode,
+  flushPendingWrites,
   type StorageMode,
   type StorageState,
 } from './storage.service';
+
+// Platform service exports
+export {
+  isNativePlatform,
+  isIOS,
+  isAndroid,
+  isWeb,
+  getPlatform,
+  getPlatformCapabilities,
+  canAccessExternalFolders,
+  getRecommendedStorageMode,
+  logPlatformInfo,
+  type Platform,
+  type PlatformCapabilities,
+} from './platform.service';
+
+// Capacitor file system exports (for direct access when needed)
+export {
+  pickFolder as pickCapacitorFolder,
+  setVaultPath as setCapacitorVaultPath,
+  hasVaultConfigured as hasCapacitorVaultConfigured,
+  requestStoragePermissions,
+} from './capacitorFileSystem.service';
 
 // Theme service exports
 export {

@@ -1,17 +1,29 @@
 /**
  * Vault Setup Screen
  * 
- * Shown when the app is running in PWA mode and no vault folder has been selected.
- * Guides the user through selecting their Obsidian vault's Goals directory.
+ * Shown when the app is running in PWA mode or native app and no vault folder has been selected.
+ * Guides the user through selecting their Goals directory.
+ * 
+ * Supports:
+ * - Web/PWA: Uses File System Access API (showDirectoryPicker)
+ * - Native (Capacitor): Uses Capacitor Filesystem + FilePicker plugins
  * 
  * For returning users who just need to re-grant permission, shows a minimal banner
  * and auto-requests permission on the first user interaction.
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { FolderOpen, Smartphone, CheckCircle, ArrowRight, RefreshCw, Unlock } from 'lucide-react';
+import { FolderOpen, Smartphone, CheckCircle, ArrowRight, RefreshCw, Unlock, Info } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
-import { requestFolderAccess, requestStoredPermission, checkFileSystemSupport } from '@/services';
+import { 
+  requestFolderAccess, 
+  requestStoredPermission, 
+  checkFileSystemSupport,
+  isNativePlatform,
+  isIOS,
+  isAndroid,
+  getPlatformCapabilities,
+} from '@/services';
 import type { VaultAccessState } from '@/types/fileSystem.types';
 
 interface VaultSetupScreenProps {
@@ -24,6 +36,8 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
   const [error, setError] = useState<string | null>(null);
   const [autoRequesting, setAutoRequesting] = useState(false);
   
+  const isNative = isNativePlatform();
+  const capabilities = getPlatformCapabilities();
   const fsSupport = checkFileSystemSupport();
 
   const handleSelectFolder = async () => {
@@ -90,8 +104,8 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
     };
   }, [vaultAccess.status, handleGrantPermission]);
 
-  // Browser not supported
-  if (!fsSupport.isFullySupported) {
+  // Browser not supported (web only check)
+  if (!isNative && !fsSupport.isFullySupported) {
     return (
       <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4">
         <Card className="max-w-md w-full p-6 text-center">
@@ -102,6 +116,27 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
           <p className="text-text-muted mb-4">{fsSupport.reason}</p>
           <p className="text-sm text-text-muted">
             Please use Chrome, Edge, or Samsung Internet on Android to access your goal files.
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
+  // iOS restriction notice - iOS cannot access external folders
+  if (isIOS() && !capabilities.canAccessExternalStorage) {
+    return (
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4">
+        <Card className="max-w-md w-full p-6 text-center">
+          <div className="w-16 h-16 bg-status-warning-bg rounded-full flex items-center justify-center mx-auto mb-4">
+            <Info className="h-8 w-8 text-status-warning" />
+          </div>
+          <h1 className="text-2xl font-bold text-text-primary mb-2">iOS Limitations</h1>
+          <p className="text-text-muted mb-4">
+            Due to iOS restrictions, external folder access is not available.
+            Please use in-app storage mode to store your goals within the app.
+          </p>
+          <p className="text-sm text-text-muted">
+            You can export your goals later if needed.
           </p>
         </Card>
       </div>
@@ -181,7 +216,7 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
           </p>
         </div>
 
-        {/* Steps */}
+        {/* Steps - adjusted for platform */}
         <div className="space-y-4 mb-6">
           <div className="flex items-start gap-3">
             <div className="w-6 h-6 bg-accent-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -190,7 +225,9 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
             <div>
               <p className="text-sm font-medium text-text-primary">Select your Goals folder</p>
               <p className="text-xs text-text-muted">
-                Navigate to your Obsidian vault's Goals directory
+                {isAndroid() 
+                  ? 'Navigate to your synced Goals directory (e.g., Syncthing/Goals)'
+                  : 'Navigate to your Obsidian vault\'s Goals directory'}
               </p>
             </div>
           </div>
@@ -220,6 +257,16 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
           </div>
         </div>
 
+        {/* Android-specific tip */}
+        {isAndroid() && (
+          <div className="bg-accent-primary/10 border border-accent-primary/20 rounded-lg p-3 mb-4">
+            <p className="text-xs text-text-secondary">
+              <strong>Tip:</strong> For Android, select any file inside your Goals folder when prompted, 
+              and the app will use that folder for all your goals.
+            </p>
+          </div>
+        )}
+
         {error && (
           <div className="bg-status-danger-bg border border-status-danger-border rounded-lg p-3 mb-4">
             <p className="text-sm text-status-danger">{error}</p>
@@ -245,8 +292,9 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
         </Button>
 
         <p className="text-xs text-text-muted text-center mt-4">
-          Your goals are stored locally on your device. 
-          Use Syncthing or similar to sync with other devices.
+          {isNative 
+            ? 'Your goals are stored on your device. Use Syncthing or similar to sync with other devices.'
+            : 'Your goals are stored locally on your device. Use Syncthing or similar to sync with other devices.'}
         </p>
       </Card>
     </div>
