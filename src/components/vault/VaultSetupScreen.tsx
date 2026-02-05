@@ -8,7 +8,7 @@
  * and auto-requests permission on the first user interaction.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { FolderOpen, Smartphone, CheckCircle, ArrowRight, RefreshCw, Unlock } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
 import { requestFolderAccess, requestStoredPermission, checkFileSystemSupport } from '@/services';
@@ -23,6 +23,7 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
   const [isSelecting, setIsSelecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [autoRequesting, setAutoRequesting] = useState(false);
+  const permissionRequestInFlight = useRef(false);
   
   const fsSupport = checkFileSystemSupport();
 
@@ -42,7 +43,8 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
   };
 
   const handleGrantPermission = useCallback(async () => {
-    if (isSelecting || autoRequesting) return;
+    if (isSelecting || autoRequesting || permissionRequestInFlight.current) return;
+    permissionRequestInFlight.current = true;
     
     setIsSelecting(true);
     setAutoRequesting(true);
@@ -59,6 +61,7 @@ export function VaultSetupScreen({ vaultAccess, onComplete }: VaultSetupScreenPr
     } finally {
       setIsSelecting(false);
       setAutoRequesting(false);
+      permissionRequestInFlight.current = false;
     }
   }, [isSelecting, autoRequesting, onComplete]);
 
