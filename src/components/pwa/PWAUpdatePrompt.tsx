@@ -5,9 +5,14 @@
 import { RefreshCw, WifiOff } from 'lucide-react';
 import { usePWA } from '@/hooks';
 import { Button } from '@/components/ui';
+import { isNativeApp } from '@/services';
 
 export function PWAUpdatePrompt() {
   const { needRefresh, offlineReady, updateServiceWorker, closePrompt } = usePWA();
+
+  if (isNativeApp()) {
+    return null;
+  }
   
   if (!needRefresh && !offlineReady) {
     return null;

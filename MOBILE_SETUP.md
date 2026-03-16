@@ -1,12 +1,43 @@
-# Mobile PWA Setup Guide
+# Mobile Setup Guide
 
-This guide explains how to install Goal Tracker as a Progressive Web App (PWA) on your Android phone, allowing you to track your goals with direct file access to your synced Goals folder.
+This app ships in two forms using the same internal storage model:
+
+- Native wrapper via Capacitor for Android and iOS.
+- Progressive Web App for browser installation.
+
+## Native App Status
+
+The repository includes generated Capacitor projects for Android and iOS.
+
+Supported native storage behavior today:
+
+- Android native: internal app storage supported.
+- iOS native: internal app storage supported.
+- No external folder permissions or markdown sync setup are required.
+
+Native wrapper commands:
+
+```bash
+cd goal_tracker/app
+npm install
+npm run cap:sync
+npm run cap:open:android
+npm run cap:open:ios
+```
+
+Notes:
+
+- Android builds can be opened and signed from Android Studio.
+- iOS project files are generated and synced here, but final build and signing require a Mac with Xcode.
+
+## PWA Setup
+
+This guide also covers installing Goal Tracker as a Progressive Web App (PWA).
 
 ## Prerequisites
 
-1. **Chrome for Android** version 132+ (or Samsung Internet 29+)
-2. **Syncthing** (or similar) set up to sync your Goals folder between PC and phone
-3. Your Goals folder synced to your phone's storage
+1. A modern browser with PWA install support
+2. Node.js and npm for local builds
 
 ## Deployment Options
 
@@ -58,7 +89,7 @@ This guide explains how to install Goal Tracker as a Progressive Web App (PWA) o
    - GitHub Pages
    - Your own web server
 
-3. **Important**: The site MUST be served over HTTPS for the File System Access API to work (except for localhost).
+3. For production PWA installs, serve the site over HTTPS.
 
 ## Installing the PWA
 
@@ -72,56 +103,25 @@ This guide explains how to install Goal Tracker as a Progressive Web App (PWA) o
 
 ## First-Time Setup
 
-When you first open the PWA:
-
-1. You'll see a welcome screen explaining that the app needs access to your Goals folder
-
-2. Tap "Select Goals Folder"
-
-3. Navigate to and select your synced Goals folder (e.g., `/storage/emulated/0/Syncthing/Goals`)
-
-4. Grant permission when prompted
-
-5. Your goals will load automatically!
+When you first open the app, it initializes its internal database automatically. New goals are created and updated directly inside the app.
 
 ## How It Works
 
-### File System Access API
-The PWA uses the File System Access API (`showDirectoryPicker()`) to:
-- Read goal markdown files directly from your file system
-- Write changes back to the files when you check off tasks
-
-### Permission Handling
-- The folder handle is stored in IndexedDB, so you don't need to re-select the folder each time
-- However, you may need to **grant permission again** when reopening the app
-- If permission is needed, you'll see a simple "Grant Access" button
-
-### Syncing
-- Changes made on your phone are written directly to the markdown files
-- Syncthing (or your sync service) will automatically sync changes to your PC
-- Changes made on PC will sync to your phone and show up next time you open the app
+- Goals are stored internally using IndexedDB.
+- The same storage flow is used by the web app and the Capacitor wrapper.
+- No folder permissions or external sync setup are required.
 
 ## Troubleshooting
 
-### "File System Access API not supported"
-- Make sure you're using Chrome 132+ or Samsung Internet 29+
-- The WebView in some apps may not support this API
-- Try updating your browser
+### App data looks missing
+- Make sure you are opening the same app build and environment.
+- Internal storage is local to the installed app or browser profile.
 
-### "Permission denied" repeatedly
-- Some Android versions have stricter file access policies
-- Try selecting a folder in your internal storage rather than SD card
-- Make sure the folder has read/write permissions for your user
+### Native changes are not visible
+- Run `npm run build` and `npm run cap:sync` before reopening the native project.
 
-### Changes not syncing
-- Check that Syncthing is running on both devices
-- Verify the folder is correctly configured in Syncthing
-- Check for sync conflicts (files ending in `.sync-conflict-*`)
-
-### Goals not loading after folder selection
-- Make sure the selected folder contains markdown files with the expected format
-- Check that files have `.md` extension
-- Verify the frontmatter format matches what the app expects
+### iOS build issues
+- Final iOS compilation and signing require Xcode on macOS.
 
 ## Development Testing
 
@@ -142,25 +142,18 @@ To test on your phone during development:
 
 3. Open the Network URL in Chrome on your phone
 
-**Note**: In dev mode, the app uses the Vite plugin for file access (configured via `VITE_GOALS_PATH`), not the File System Access API. To test the PWA folder picker, you need to:
-- Build with `npm run build`
-- Serve with `npm run preview`
-- Or test in production
-
 ## Browser Support
 
 | Browser | Min Version | Notes |
 |---------|-------------|-------|
-| Chrome Android | 132+ | Full support |
-| Samsung Internet | 29+ | Full support |
-| Chrome Desktop | 86+ | Full support |
-| Edge Desktop | 86+ | Full support |
-| Firefox | ❌ | Not supported |
-| Safari | ❌ | Not supported |
+| Chrome Android | Current | PWA install support |
+| Samsung Internet | Current | PWA install support |
+| Chrome Desktop | Current | Full support |
+| Edge Desktop | Current | Full support |
+| Firefox | Current | Web app support, install behavior varies |
+| Safari | Current | Web app support, install behavior varies |
 
 ## Security Notes
 
-- The File System Access API requires a secure context (HTTPS or localhost)
-- Permission grants are scoped to the specific folder you selected
-- The app can only access files within the selected folder
-- Permissions can be revoked in Chrome settings → Site Settings
+- Production PWAs should be served over HTTPS.
+- App data is stored locally inside the browser or native app container.

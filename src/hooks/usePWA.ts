@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { registerSW } from 'virtual:pwa-register';
+import { isNativeApp } from '@/services';
 
 interface UsePWAReturn {
   needRefresh: boolean;
@@ -18,6 +19,11 @@ export function usePWA(): UsePWAReturn {
   const updateSWRef = useRef<(() => Promise<void>) | null>(null);
   
   useEffect(() => {
+    if (isNativeApp()) {
+      updateSWRef.current = null;
+      return;
+    }
+
     const updateFunction = registerSW({
       onNeedRefresh() {
         setNeedRefresh(true);

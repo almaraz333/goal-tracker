@@ -14,7 +14,9 @@ interface CalendarPageProps {
   onToggleWeeklySubtask: (goalId: string, subtaskId: string, weekKey: string) => void;
   onIncrementMonthlyProgress: (goalId: string, monthKey: string) => void;
   onDecrementMonthlyProgress: (goalId: string, monthKey: string) => void;
-  onGoalsReload?: () => void;
+  onGoalUpdated?: (goal: Goal) => void;
+  onGoalDeleted?: (goalId: string) => void;
+  existingCategories?: string[];
 }
 
 export function CalendarPage({ 
@@ -23,7 +25,9 @@ export function CalendarPage({
   onToggleWeeklySubtask,
   onIncrementMonthlyProgress,
   onDecrementMonthlyProgress,
-  onGoalsReload,
+  onGoalUpdated,
+  onGoalDeleted,
+  existingCategories = [],
 }: CalendarPageProps) {
   const [modalGoalType, setModalGoalType] = useState<GoalType | null>(null);
   
@@ -79,7 +83,9 @@ export function CalendarPage({
           onClose={handleCloseModal}
           goals={goals}
           goalType={modalGoalType}
-          onGoalUpdated={onGoalsReload}
+          onGoalUpdated={onGoalUpdated}
+          onGoalDeleted={onGoalDeleted}
+          existingCategories={existingCategories}
         />
       )}
     </div>

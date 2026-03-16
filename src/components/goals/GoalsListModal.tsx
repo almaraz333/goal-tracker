@@ -16,9 +16,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { Modal, Badge } from '@/components/ui';
-import { GoalDetailView } from './GoalDetailView';
 import { GoalEditModal } from './GoalEditModal';
-import { isInAppStorageMode } from '@/services';
 import type { Goal, GoalType } from '@/types';
 import { formatDateDisplay, parseISODate } from '@/utils';
 
@@ -41,10 +39,7 @@ export function GoalsListModal({
   onGoalDeleted,
   existingCategories = [],
 }: GoalsListModalProps) {
-  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
-  
-  const inAppMode = isInAppStorageMode();
 
   // Filter goals by type and get all (including inactive for reference)
   const filteredGoals = useMemo(() => {
@@ -82,21 +77,10 @@ export function GoalsListModal({
   };
 
   const handleGoalClick = (goal: Goal) => {
-    if (inAppMode) {
-      // In-app mode: use form-based edit modal
-      setEditingGoal(goal);
-    } else {
-      // External folder mode: show detail view with markdown editor
-      setSelectedGoal(goal);
-    }
-  };
-
-  const handleBackToList = () => {
-    setSelectedGoal(null);
+    setEditingGoal(goal);
   };
 
   const handleClose = () => {
-    setSelectedGoal(null);
     setEditingGoal(null);
     onClose();
   };
@@ -116,84 +100,73 @@ export function GoalsListModal({
     <Modal 
       isOpen={isOpen} 
       onClose={handleClose} 
-      title={selectedGoal ? undefined : getTitle()}
+      title={getTitle()}
       size="lg"
     >
       <div className="max-h-[70vh] overflow-y-auto">
-        {selectedGoal ? (
-          <GoalDetailView 
-            goal={selectedGoal} 
-            onBack={handleBackToList}
-            onGoalUpdated={() => onGoalUpdated?.(selectedGoal)}
-          />
-        ) : (
-          <div className="space-y-4">
-            {/* Summary */}
-            <div className="flex items-center gap-3 p-3 bg-bg-secondary/50 rounded-lg">
-              {getTypeIcon()}
-              <div>
-                <p className={`text-lg font-semibold ${getTypeColor()}`}>
-                  {activeGoals.length} Active
-                </p>
-                <p className="text-xs text-text-muted">
-                  {inactiveGoals.length} inactive ({filteredGoals.length} total)
-                </p>
+        <div className="space-y-4">
+          {/* Summary */}
+          <div className="flex items-center gap-3 p-3 bg-bg-secondary/50 rounded-lg">
+            {getTypeIcon()}
+            <div>
+              <p className={`text-lg font-semibold ${getTypeColor()}`}>
+                {activeGoals.length} Active
+              </p>
+              <p className="text-xs text-text-muted">
+                {inactiveGoals.length} inactive ({filteredGoals.length} total)
+              </p>
+            </div>
+          </div>
+
+          {/* Active Goals */}
+          {activeGoals.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-text-muted uppercase tracking-wide mb-2">
+                Active Goals
+              </h3>
+              <div className="space-y-2">
+                {activeGoals.map(goal => (
+                  <GoalListItem 
+                    key={goal.id} 
+                    goal={goal} 
+                    onClick={() => handleGoalClick(goal)}
+                  />
+                ))}
               </div>
             </div>
+          )}
 
-            {/* Active Goals */}
-            {activeGoals.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-text-muted uppercase tracking-wide mb-2">
-                  Active Goals
-                </h3>
-                <div className="space-y-2">
-                  {activeGoals.map(goal => (
-                    <GoalListItem 
-                      key={goal.id} 
-                      goal={goal} 
-                      onClick={() => handleGoalClick(goal)}
-                    />
-                  ))}
-                </div>
+          {/* Inactive Goals */}
+          {inactiveGoals.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-text-muted uppercase tracking-wide mb-2">
+                Inactive Goals
+              </h3>
+              <div className="space-y-2 opacity-60">
+                {inactiveGoals.map(goal => (
+                  <GoalListItem 
+                    key={goal.id} 
+                    goal={goal} 
+                    onClick={() => handleGoalClick(goal)}
+                  />
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* Inactive Goals */}
-            {inactiveGoals.length > 0 && (
-              <div>
-                <h3 className="text-sm font-medium text-text-muted uppercase tracking-wide mb-2">
-                  Inactive Goals
-                </h3>
-                <div className="space-y-2 opacity-60">
-                  {inactiveGoals.map(goal => (
-                    <GoalListItem 
-                      key={goal.id} 
-                      goal={goal} 
-                      onClick={() => handleGoalClick(goal)}
-                    />
-                  ))}
-                </div>
+          {/* Empty State */}
+          {filteredGoals.length === 0 && (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                {getTypeIcon()}
               </div>
-            )}
-
-            {/* Empty State */}
-            {filteredGoals.length === 0 && (
-              <div className="text-center py-8">
-                <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                  {getTypeIcon()}
-                </div>
-                <p className="text-text-muted">No {goalType} goals found</p>
-                <p className="text-xs text-text-muted mt-1">
-                  {inAppMode 
-                    ? `Create a new ${goalType} goal using the + button`
-                    : `Create a new ${goalType} goal in your Obsidian vault`
-                  }
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+              <p className="text-text-muted">No {goalType} goals found</p>
+              <p className="text-xs text-text-muted mt-1">
+                {`Create a new ${goalType} goal using the + button`}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </Modal>
 

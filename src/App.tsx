@@ -2,26 +2,20 @@
  * Main App Component
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { MainLayout } from '@/layouts';
 import { CalendarPage, DayDetailPage } from '@/pages';
 import { LoadingOverlay, Card, Button } from '@/components/ui';
 import { PWAUpdatePrompt } from '@/components/pwa/PWAUpdatePrompt';
-import { VaultSetupScreen, StorageModeSelector } from '@/components/vault';
-import { GoalCreationModal, GoalEditModal } from '@/components/goals';
+import { GoalCreationModal } from '@/components/goals';
 import { ErrorBoundary } from '@/components/errors';
 import { useAppStore } from '@/store';
 import { buildCalendarDay, formatDateToISO } from '@/utils';
 import { 
   initializeStorage, 
   loadGoals, 
-  requiresUserAction,
-  isInAppStorageMode,
-  type StorageState 
 } from '@/services/storage.service';
-import { getUniqueCategoriesFromGoals } from '@/services/indexedDbStorage.service';
-import { goalFiles } from 'virtual:goals';
 import { mockGoals } from '@/data';
 import { env } from '@/config';
 import type { Goal } from '@/types';
@@ -43,26 +37,22 @@ export function App() {
     updateMonthlyProgress,
     updateGoal,
   } = useAppStore();
-
-  // Storage state for native FS mode
-  const [storageState, setStorageState] = useState<StorageState | null>(null);
   
   // Goal creation/edit modals
   const [showCreateGoal, setShowCreateGoal] = useState(false);
-  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
-  const [existingCategories, setExistingCategories] = useState<string[]>([]);
 
-  // Check if we're in in-app storage mode
-  const canCreateGoals = isInAppStorageMode();
+  const canCreateGoals = true;
 
-  // Load categories for goal creation/editing
-  useEffect(() => {
-    if (canCreateGoals) {
-      getUniqueCategoriesFromGoals()
-        .then(setExistingCategories)
-        .catch(console.error);
-    }
-  }, [canCreateGoals, goals]);
+  const existingCategories = useMemo(
+    () => Array.from(
+      new Set(
+        goals
+          .map(goal => goal.category.trim())
+          .filter(category => category.length > 0)
+      )
+    ).sort((left, right) => left.localeCompare(right)),
+    [goals]
+  );
 
   // Load initial data
   useEffect(() => {
@@ -79,15 +69,7 @@ export function App() {
           return;
         }
 
-        // Initialize storage adapter (handles both Vite and native FS modes)
-        const state = await initializeStorage(goalFiles);
-        setStorageState(state);
-
-        // If storage requires user action (folder selection or permission), stop loading
-        if (requiresUserAction(state)) {
-          setLoading(false);
-          return;
-        }
+        const state = await initializeStorage();
 
         // If storage is not ready and has an error, show error
         if (!state.isReady && state.error) {
@@ -110,48 +92,6 @@ export function App() {
     initialize();
   }, [setGoals, setLoading, setError]);
 
-  // Handle folder access granted from setup screen
-  const handleFolderAccessGranted = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Re-initialize storage to get updated state
-      const state = await initializeStorage(goalFiles);
-      setStorageState(state);
-      
-      if (state.isReady) {
-        const loadedGoals = await loadGoals();
-        setGoals(loadedGoals);
-      }
-    } catch (err) {
-      console.error('Failed to load goals after access granted:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load goals');
-    } finally {
-      setLoading(false);
-    }
-  }, [setGoals, setLoading, setError]);
-
-  // Handle storage mode selected (first-time setup)
-  const handleStorageModeSelected = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Re-initialize storage with the new preference
-      const state = await initializeStorage(goalFiles);
-      setStorageState(state);
-      
-      // If in-app mode, storage is ready immediately
-      // If external folder mode, may need folder selection
-      if (state.isReady) {
-        const loadedGoals = await loadGoals();
-        setGoals(loadedGoals);
-      }
-    } catch (err) {
-      console.error('Failed to initialize after mode selection:', err);
-      setError(err instanceof Error ? err.message : 'Failed to initialize storage');
-    } finally {
-      setLoading(false);
-    }
-  }, [setGoals, setLoading, setError]);
-
   // Handle goal created
   const handleGoalCreated = useCallback((goal: Goal) => {
     setGoals([...goals, goal]);
@@ -160,13 +100,11 @@ export function App() {
   // Handle goal updated (from edit modal)
   const handleGoalUpdated = useCallback((updatedGoal: Goal) => {
     updateGoal(updatedGoal);
-    setEditingGoal(null);
   }, [updateGoal]);
 
   // Handle goal deleted
   const handleGoalDeleted = useCallback((goalId: string) => {
     setGoals(goals.filter(g => g.id !== goalId));
-    setEditingGoal(null);
   }, [goals, setGoals]);
 
   // Handle day selection
@@ -219,23 +157,6 @@ export function App() {
     );
   }
 
-  // Storage mode selection required (first-time setup)
-  if (storageState?.needsStorageChoice) {
-    return (
-      <StorageModeSelector onComplete={handleStorageModeSelected} />
-    );
-  }
-
-  // Vault setup required (native FS mode, no folder selected or permission needed)
-  if (storageState && requiresUserAction(storageState) && storageState.vaultAccess) {
-    return (
-      <VaultSetupScreen 
-        vaultAccess={storageState.vaultAccess}
-        onComplete={handleFolderAccessGranted}
-      />
-    );
-  }
-
   // Error state
   if (error) {
     return (
@@ -264,6 +185,9 @@ export function App() {
             onToggleWeeklySubtask={handleToggleWeeklySubtask}
             onIncrementMonthlyProgress={handleIncrementMonthlyProgress}
             onDecrementMonthlyProgress={handleDecrementMonthlyProgress}
+            onGoalUpdated={handleGoalUpdated}
+            onGoalDeleted={handleGoalDeleted}
+            existingCategories={existingCategories}
           />
         ) : selectedDayData ? (
           <DayDetailPage
@@ -278,10 +202,13 @@ export function App() {
             onToggleWeeklySubtask={handleToggleWeeklySubtask}
             onIncrementMonthlyProgress={handleIncrementMonthlyProgress}
             onDecrementMonthlyProgress={handleDecrementMonthlyProgress}
+            onGoalUpdated={handleGoalUpdated}
+            onGoalDeleted={handleGoalDeleted}
+            existingCategories={existingCategories}
           />
         )}
 
-        {/* Floating Action Button for creating goals (in-app mode only) */}
+        {/* Floating Action Button for creating goals */}
         {canCreateGoals && (
           <button
             onClick={() => setShowCreateGoal(true)}
@@ -299,18 +226,6 @@ export function App() {
           onGoalCreated={handleGoalCreated}
           existingCategories={existingCategories}
         />
-
-        {/* Goal Edit Modal */}
-        {editingGoal && (
-          <GoalEditModal
-            isOpen={!!editingGoal}
-            onClose={() => setEditingGoal(null)}
-            goal={editingGoal}
-            onGoalUpdated={handleGoalUpdated}
-            onGoalDeleted={handleGoalDeleted}
-            existingCategories={existingCategories}
-          />
-        )}
       </MainLayout>
       <PWAUpdatePrompt />
     </ErrorBoundary>

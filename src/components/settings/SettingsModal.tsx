@@ -1,118 +1,29 @@
 /**
- * Settings Modal component - allows users to configure app settings
- * 
- * Features:
- * - Theme customization with presets and custom themes
- * - Vault path configuration for development mode
- * - Folder picker for PWA mode (File System Access API)
- * - Permission status indicator
+ * Settings Modal component
  */
 
-import { useState, useMemo, useEffect } from 'react';
-import { Settings, FolderOpen, X, Save, CheckCircle, AlertCircle, Folder, Palette, HardDrive, Smartphone, AlertTriangle } from 'lucide-react';
+import { useState } from 'react';
+import { Settings, X, Palette, HardDrive, Smartphone } from 'lucide-react';
 import { Button, Modal, Card } from '@/components/ui';
 import { ThemeSelector } from './ThemeSelector';
 import { CustomThemeEditor } from './CustomThemeEditor';
-import { 
-  getStoredVaultPath, 
-  setStoredVaultPath, 
-  DEFAULT_VAULT_PATH,
-  setStoragePreference,
-  type StoragePreference,
-} from '@/utils/settings.utils';
-import { 
-  getStorageMode, 
-  getStorageState, 
-  requestFolderAccess, 
-  clearFolderAccess,
-  checkFileSystemSupport,
-} from '@/services';
-import type { StorageState } from '@/services/storage.service';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onVaultPathChange?: (path: string) => void;
-  onFolderSelected?: () => void;
 }
 
-export function SettingsModal({ isOpen, onClose, onVaultPathChange, onFolderSelected }: SettingsModalProps) {
-  // Dev mode vault path
-  const initialPath = useMemo(() => isOpen ? getStoredVaultPath() : DEFAULT_VAULT_PATH, [isOpen]);
-  const [vaultPath, setVaultPath] = useState(initialPath);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [saved, setSaved] = useState(false);
-  
-  // Theme editor state
+export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [isEditingTheme, setIsEditingTheme] = useState(false);
-  
-  // Storage state for native FS mode
-  const [storageState, setStorageState] = useState<StorageState | null>(null);
-  const [isSelectingFolder, setIsSelectingFolder] = useState(false);
-  
-  // Storage mode switching state
-  const [showStorageWarning, setShowStorageWarning] = useState(false);
-  const [pendingStorageMode, setPendingStorageMode] = useState<StoragePreference | null>(null);
-  
-  const storageMode = getStorageMode();
-  const fsSupport = checkFileSystemSupport();
 
-  // Load storage state when modal opens
-  useEffect(() => {
-    if (isOpen && storageMode === 'native-fs') {
-      getStorageState().then(setStorageState);
-    }
-    // Reset theme editing when modal closes
-    if (!isOpen) {
-      setIsEditingTheme(false);
-    }
-  }, [isOpen, storageMode]);
-
-  const handlePathChange = (newPath: string) => {
-    setVaultPath(newPath);
-    setHasChanges(newPath !== getStoredVaultPath());
-    setSaved(false);
-  };
-
-  const handleSave = () => {
-    setStoredVaultPath(vaultPath);
-    setHasChanges(false);
-    setSaved(true);
-    onVaultPathChange?.(vaultPath);
-  };
-
-  const handleReset = () => {
-    setVaultPath(DEFAULT_VAULT_PATH);
-    setHasChanges(DEFAULT_VAULT_PATH !== getStoredVaultPath());
-    setSaved(false);
-  };
-
-  const handleSelectFolder = async () => {
-    setIsSelectingFolder(true);
-    try {
-      const success = await requestFolderAccess();
-      if (success) {
-        const newState = await getStorageState();
-        setStorageState(newState);
-        onFolderSelected?.();
-      }
-    } catch (error) {
-      console.error('Failed to select folder:', error);
-    } finally {
-      setIsSelectingFolder(false);
-    }
-  };
-
-  const handleClearFolder = async () => {
-    await clearFolderAccess();
-    const newState = await getStorageState();
-    setStorageState(newState);
+  const handleClose = () => {
+    setIsEditingTheme(false);
+    onClose();
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Settings">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Settings">
       <div className="space-y-4">
-        
         {/* Theme Customization Section */}
         <Card className="p-3">
           <div className="flex items-center gap-2 mb-2">
@@ -132,267 +43,24 @@ export function SettingsModal({ isOpen, onClose, onVaultPathChange, onFolderSele
           )}
         </Card>
 
-        {/* Native File System Mode (PWA/Production) */}
-        {storageMode === 'native-fs' && (
-          <Card className="p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <Folder className="h-4 w-4 text-purple-400" />
-              <h3 className="text-base font-semibold text-gray-100">Goals Folder</h3>
-            </div>
-            
-            <p className="text-xs text-gray-400 mb-3">
-              Select the folder containing your goal markdown files.
-            </p>
-
-            {/* Current folder status */}
-            {storageState?.vaultAccess && (
-              <div className="mb-3">
-                {storageState.vaultAccess.status === 'ready' && (
-                  <div className="flex items-center gap-2 p-2 bg-green-900/30 border border-green-700 rounded-lg">
-                    <CheckCircle className="h-4 w-4 text-green-400" />
-                    <div>
-                      <p className="text-xs font-medium text-green-300">Connected</p>
-                      <p className="text-xs text-green-400">{storageState.vaultAccess.folderName}</p>
-                    </div>
-                  </div>
-                )}
-                
-                {storageState.vaultAccess.status === 'permission-needed' && (
-                  <div className="flex items-center gap-2 p-2 bg-yellow-900/30 border border-yellow-700 rounded-lg">
-                    <AlertCircle className="h-4 w-4 text-yellow-400" />
-                    <div>
-                      <p className="text-xs font-medium text-yellow-300">Permission Required</p>
-                      <p className="text-xs text-yellow-400">
-                        Tap "Grant Access" to reconnect
-                      </p>
-                    </div>
-                  </div>
-                )}
-                
-                {storageState.vaultAccess.status === 'not-configured' && (
-                  <div className="flex items-center gap-2 p-2 bg-gray-800 border border-gray-600 rounded-lg">
-                    <FolderOpen className="h-4 w-4 text-gray-400" />
-                    <p className="text-xs text-gray-400">No folder selected</p>
-                  </div>
-                )}
-                
-                {storageState.vaultAccess.status === 'error' && (
-                  <div className="flex items-center gap-2 p-2 bg-red-900/30 border border-red-700 rounded-lg">
-                    <AlertCircle className="h-4 w-4 text-red-400" />
-                    <div>
-                      <p className="text-xs font-medium text-red-300">Error</p>
-                      <p className="text-xs text-red-400">{storageState.vaultAccess.error}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <Button 
-                onClick={handleSelectFolder} 
-                variant="primary"
-                size="sm"
-                disabled={isSelectingFolder}
-              >
-                <FolderOpen className="h-4 w-4 mr-1" />
-                {storageState?.vaultAccess?.status === 'ready' ? 'Change Folder' : 
-                 storageState?.vaultAccess?.status === 'permission-needed' ? 'Grant Access' :
-                 'Select Folder'}
-              </Button>
-              
-              {storageState?.vaultAccess?.status === 'ready' && (
-                <Button onClick={handleClearFolder} variant="ghost" size="sm">
-                  Disconnect
-                </Button>
-              )}
-            </div>
-          </Card>
-        )}
-
-        {/* Development Mode - Text Path Input */}
-        {storageMode === 'vite' && (
-          <Card className="p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <FolderOpen className="h-4 w-4 text-blue-400" />
-              <h3 className="text-base font-semibold text-gray-100">Goals Vault Path</h3>
-              <span className="text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded">Dev</span>
-            </div>
-            
-            <p className="text-xs text-gray-400 mb-3">
-              Set the path to your goals folder for the Vite dev server.
-            </p>
-
-            <div className="space-y-2">
-              <div>
-                <label htmlFor="vault-path" className="block text-sm font-medium text-gray-300 mb-1">
-                  Vault Path
-                </label>
-                <input
-                  id="vault-path"
-                  type="text"
-                  value={vaultPath}
-                  onChange={(e) => handlePathChange(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="../Goals"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button 
-                  onClick={handleSave} 
-                  disabled={!hasChanges}
-                  variant={hasChanges ? 'primary' : 'ghost'}
-                  size="sm"
-                >
-                  <Save className="h-4 w-4 mr-1" />
-                  Save
-                </Button>
-                <Button onClick={handleReset} variant="ghost" size="sm">
-                  Reset to Default
-                </Button>
-                {saved && (
-                  <span className="text-sm text-green-400 ml-2">
-                    ✓ Saved! Reload to apply changes.
-                  </span>
-                )}
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {/* Browser Support Info */}
-        {!fsSupport.isFullySupported && storageMode !== 'vite' && (
-          <Card className="p-4 border-yellow-600">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertCircle className="h-5 w-5 text-yellow-400" />
-              <h3 className="text-lg font-semibold text-yellow-300">Limited Browser Support</h3>
-            </div>
-            <p className="text-sm text-gray-400">
-              {fsSupport.reason}
-            </p>
-          </Card>
-        )}
-
-        {/* Storage Mode Section */}
+        {/* Storage Section */}
         <Card className="p-3">
           <div className="flex items-center gap-2 mb-2">
             <HardDrive className="h-4 w-4 text-accent-secondary" />
-            <h3 className="text-base font-semibold text-text-primary">Storage Mode</h3>
-            {storageMode === 'vite' && (
-              <span className="text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded">Dev</span>
-            )}
+            <h3 className="text-base font-semibold text-text-primary">Storage</h3>
           </div>
-          
-          <p className="text-xs text-text-muted mb-3">
-            {storageMode === 'vite' 
-              ? 'Development mode uses local files. Storage switching is available in production PWA.'
-              : 'Choose where to store your goals data.'
-            }
-          </p>
-
-          {/* Current mode indicator */}
           <div className="flex items-center gap-2 p-2 bg-bg-tertiary rounded-lg mb-3">
-            {storageMode === 'vite' ? (
-              <>
-                <FolderOpen className="h-4 w-4 text-blue-400" />
-                <span className="text-sm text-text-primary">Development (Vite)</span>
-              </>
-            ) : storageMode === 'indexed-db' ? (
-              <>
-                <Smartphone className="h-4 w-4 text-status-success" />
-                <span className="text-sm text-text-primary">In-App Storage</span>
-              </>
-            ) : storageMode === 'native-fs' ? (
-              <>
-                <FolderOpen className="h-4 w-4 text-accent-primary" />
-                <span className="text-sm text-text-primary">External Folder</span>
-              </>
-            ) : (
-              <>
-                <AlertCircle className="h-4 w-4 text-status-warning" />
-                <span className="text-sm text-text-primary">Not configured</span>
-              </>
-            )}
+            <Smartphone className="h-4 w-4 text-status-success" />
+            <span className="text-sm text-text-primary">In-App Storage</span>
           </div>
-
-          {/* Switch mode buttons - only in production */}
-          {storageMode !== 'vite' && (
-            <>
-              {!showStorageWarning ? (
-                <div className="flex gap-2">
-                  {storageMode !== 'indexed-db' && (
-                    <Button
-                      onClick={() => {
-                        setPendingStorageMode('in-app');
-                        setShowStorageWarning(true);
-                      }}
-                      variant="ghost"
-                      size="sm"
-                    >
-                      <Smartphone className="h-4 w-4 mr-1" />
-                      Switch to In-App
-                    </Button>
-                  )}
-                  {storageMode !== 'native-fs' && fsSupport.isFullySupported && (
-                    <Button
-                      onClick={() => {
-                        setPendingStorageMode('external-folder');
-                        setShowStorageWarning(true);
-                      }}
-                      variant="ghost"
-                      size="sm"
-                    >
-                      <FolderOpen className="h-4 w-4 mr-1" />
-                      Switch to External
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <div className="p-3 bg-status-danger-bg border border-status-danger-border rounded-lg">
-                  <div className="flex items-start gap-2 mb-3">
-                    <AlertTriangle className="h-4 w-4 text-status-danger mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-status-danger">Warning</p>
-                      <p className="text-xs text-text-secondary mt-1">
-                        Switching storage modes will not transfer your existing goals. 
-                        You will start fresh with the new storage mode.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => {
-                        if (pendingStorageMode) {
-                          setStoragePreference(pendingStorageMode);
-                          window.location.reload();
-                        }
-                      }}
-                      variant="primary"
-                      size="sm"
-                    >
-                      Switch Anyway
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setShowStorageWarning(false);
-                        setPendingStorageMode(null);
-                      }}
-                      variant="ghost"
-                      size="sm"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+          <p className="text-xs text-text-muted">
+            Goals are stored internally using IndexedDB. The external folder workflow has been removed.
+          </p>
         </Card>
 
         {/* Close button */}
         <div className="flex justify-end">
-          <Button onClick={onClose} variant="ghost">
+          <Button onClick={handleClose} variant="ghost">
             <X className="h-4 w-4 mr-1" />
             Close
           </Button>
@@ -405,12 +73,7 @@ export function SettingsModal({ isOpen, onClose, onVaultPathChange, onFolderSele
 /**
  * Settings button component that opens the settings modal
  */
-interface SettingsButtonProps {
-  onVaultPathChange?: (path: string) => void;
-  onFolderSelected?: () => void;
-}
-
-export function SettingsButton({ onVaultPathChange, onFolderSelected }: SettingsButtonProps) {
+export function SettingsButton() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -425,8 +88,6 @@ export function SettingsButton({ onVaultPathChange, onFolderSelected }: Settings
       <SettingsModal 
         isOpen={isOpen} 
         onClose={() => setIsOpen(false)}
-        onVaultPathChange={onVaultPathChange}
-        onFolderSelected={onFolderSelected}
       />
     </>
   );

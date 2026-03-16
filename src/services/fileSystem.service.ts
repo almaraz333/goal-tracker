@@ -1,12 +1,11 @@
 /**
  * File System Service for reading goal files
- * 
- * This service handles reading goal markdown files and parsing them into Goal objects.
- * Works with statically bundled files during build time.
+ *
+ * This service now focuses on markdown parsing and serialization for the
+ * internal IndexedDB storage backend.
  */
 
 import type { Goal, GoalType, GoalStatus, Priority, Recurrence, Subtask, MonthlyProgress, DailySubtaskCompletions, WeeklySubtaskCompletions } from '@/types';
-import { env } from '@/config';
 
 /**
  * Parse YAML frontmatter from markdown content
@@ -35,7 +34,7 @@ export function parseFrontmatter(content: string): Record<string, unknown> {
     }
     
     // Match key: value pattern
-    const keyMatch = trimmed.match(/^([\w\.-]+):\s*(.*)$/);
+    const keyMatch = trimmed.match(/^([\w.-]+):\s*(.*)$/);
     if (!keyMatch) {
       i++;
       continue;
@@ -112,7 +111,7 @@ export function parseFrontmatter(content: string): Record<string, unknown> {
           if (!propLine.startsWith('  ') || propLine.trim().startsWith('-')) {
             break;
           }
-          const propMatch = propLine.trim().match(/^([\w\.-]+):\s*(.*)$/);
+          const propMatch = propLine.trim().match(/^([\w.-]+):\s*(.*)$/);
           if (propMatch) {
             const [, propKey, propValue] = propMatch;
             
@@ -269,72 +268,6 @@ export function frontmatterToGoal(
   };
 }
 
-// Goal file registry - populated during build or at runtime
-interface GoalFile {
-  path: string;
-  category: string;
-  content: string;
-}
-
-// This will be populated by the goal loader
-let goalFiles: GoalFile[] = [];
-
-// Cache for goal file content (for viewing/editing in dev mode)
-const goalContentCache = new Map<string, string>();
-
-/**
- * Get cached goal content by file path
- */
-export function getGoalContent(filePath: string): string | null {
-  return goalContentCache.get(filePath) ?? null;
-}
-
-/**
- * Register goal files (called by the generated goal manifest)
- */
-export function registerGoalFiles(files: GoalFile[]): void {
-  goalFiles = files;
-}
-
-/**
- * Load all goals from registered files
- */
-export function loadGoalsFromFiles(): Goal[] {
-  return goalFiles
-    .filter(file => !file.path.includes('_category'))
-    .map(file => {
-      // Cache the content for later viewing/editing
-      goalContentCache.set(file.path, file.content);
-      
-      const frontmatter = parseFrontmatter(file.content);
-      return frontmatterToGoal(frontmatter, file.content, file.path, file.category);
-    });
-}
-
-/**
- * Fetch goals from file system - returns goals from bundled files or manifest
- */
-export async function fetchGoalsFromFiles(): Promise<Goal[]> {
-  // If we have registered files, use those
-  if (goalFiles.length > 0) {
-    return loadGoalsFromFiles();
-  }
-  
-  // Otherwise, try to fetch from the goals manifest
-  try {
-    const response = await fetch(`${env.goalsPath}/manifest.json`);
-    if (response.ok) {
-      const manifest = await response.json() as GoalFile[];
-      registerGoalFiles(manifest);
-      return loadGoalsFromFiles();
-    }
-  } catch {
-    console.warn('Could not load goals manifest, using empty array');
-  }
-  
-  return [];
-}
-
 /**
  * Serialize a Goal object back to YAML frontmatter string
  */
@@ -440,83 +373,4 @@ ${frontmatter}
 
 ${goalBody}
 `;
-}
-
-// Debounce map for save operations (one timer per goal)
-const saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
-const SAVE_DEBOUNCE_MS = 300;
-
-/**
- * Internal save implementation
- */
-async function performSave(goal: Goal): Promise<void> {
-  // Find original file content to preserve body
-  const originalFile = goalFiles.find(f => f.path === goal.filePath);
-  
-  if (!originalFile) {
-    console.error(`Cannot save goal: File not found in registry for path ${goal.filePath}`);
-    return;
-  }
-  
-  // Split original content to separate frontmatter and body
-  // We assume standard Jekyll-style frontmatter with --- delimiters
-  const parts = originalFile.content.split('---');
-  
-  let body = '';
-  // parts[0] is usually empty string before first ---
-  // parts[1] is frontmatter
-  // parts[2] is body
-  
-  if (parts.length >= 3) {
-    // Reconstruct body (might contain --- itself so join back)
-    body = parts.slice(2).join('---');
-    // Remove leading newline if present from the split
-    if (body.startsWith('\n')) body = body.substring(1);
-  } else {
-    // Fallback?
-    body = originalFile.content.replace(/^---\n[\s\S]*?\n---\n?/, '');
-  }
-  
-  const newFrontmatter = serializeFrontmatter(goal);
-  const newContent = `---\n${newFrontmatter}\n---\n${body}`;
-  
-  // optimistic update
-  originalFile.content = newContent;
-  
-  try {
-    const res = await fetch('/api/save-goal', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        filePath: goal.filePath,
-        content: newContent
-      })
-    });
-    
-    if (!res.ok) throw new Error(await res.text());
-  } catch (err) {
-    console.error('Failed to save goal:', err);
-  }
-}
-
-/**
- * Save a goal to the file system (persist changes)
- * 
- * Uses debouncing to prevent rapid-fire writes when users quickly
- * toggle multiple checkboxes. Each goal has its own debounce timer.
- */
-export function saveGoal(goal: Goal): void {
-  // Clear existing timer for this goal
-  const existingTimer = saveTimers.get(goal.id);
-  if (existingTimer) {
-    clearTimeout(existingTimer);
-  }
-  
-  // Set new debounced save
-  const timer = setTimeout(() => {
-    saveTimers.delete(goal.id);
-    performSave(goal);
-  }, SAVE_DEBOUNCE_MS);
-  
-  saveTimers.set(goal.id, timer);
 }

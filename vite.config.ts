@@ -1,23 +1,17 @@
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import path from 'path'
-import { goalsPlugin } from './vite-plugin-goals'
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
-  // Load env file based on mode
-  const env = loadEnv(mode, process.cwd(), '')
-  const goalsPath = env.VITE_GOALS_PATH || '../Goals'
-  
+export default defineConfig(() => {
   return {
     plugins: [
       react(),
       basicSsl(),
       tailwindcss(),
-      goalsPlugin(goalsPath),
       VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.ico', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png'],

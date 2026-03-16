@@ -8,10 +8,9 @@ import { SettingsButton } from '@/components/settings';
 
 interface MainLayoutProps {
   children: ReactNode;
-  onVaultPathChange?: (path: string) => void;
 }
 
-export function MainLayout({ children, onVaultPathChange }: MainLayoutProps) {
+export function MainLayout({ children }: MainLayoutProps) {
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary safe-area-inset">
       {/* Header */}
@@ -23,7 +22,7 @@ export function MainLayout({ children, onVaultPathChange }: MainLayoutProps) {
               <h1 className="text-lg font-bold text-text-primary">Goal Tracker</h1>
             </div>
             
-            <SettingsButton onVaultPathChange={onVaultPathChange} />
+            <SettingsButton />
           </div>
         </div>
       </header>
