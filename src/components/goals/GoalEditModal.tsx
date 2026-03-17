@@ -1,7 +1,7 @@
 /**
  * Goal Edit Modal
  * 
- * Form-based modal for editing goals when using in-app storage mode.
+ * Form-based modal for editing goals.
  * Does not allow raw markdown editing - only structured form fields.
  */
 

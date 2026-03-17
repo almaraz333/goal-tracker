@@ -1,11 +1,9 @@
 /**
- * IndexedDB Storage Service for In-App Goal Storage
+ * IndexedDB Storage Service
  * 
- * Provides a complete storage backend using IndexedDB for users who want to
- * store goals within the app rather than in an external folder.
- * 
- * Goals are stored as markdown strings to maintain compatibility with
- * the external folder format.
+ * Provides the app's local persistence layer using IndexedDB.
+ * Goals are stored as markdown strings so the frontmatter format stays
+ * consistent across parsing and serialization.
  */
 
 import type { Goal } from '@/types';
@@ -390,7 +388,7 @@ export async function hasStoredGoals(): Promise<boolean> {
 }
 
 /**
- * Clear all goals from IndexedDB (for mode switching)
+ * Clear all goals from IndexedDB.
  */
 export async function clearAllGoalsFromIndexedDB(): Promise<void> {
   const db = await openDatabase();

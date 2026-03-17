@@ -1,6 +1,6 @@
 # Mobile Setup Guide
 
-This app ships in two forms using the same internal storage model:
+This app ships in two forms, both storing goal data locally on the device:
 
 - Native wrapper via Capacitor for Android and iOS.
 - Progressive Web App for browser installation.
@@ -11,9 +11,9 @@ The repository includes generated Capacitor projects for Android and iOS.
 
 Supported native storage behavior today:
 
-- Android native: internal app storage supported.
-- iOS native: internal app storage supported.
-- No external folder permissions or markdown sync setup are required.
+- Android native: local app database supported.
+- iOS native: local app database supported.
+- No extra storage permissions or sync setup are required.
 
 Native wrapper commands:
 
@@ -103,19 +103,19 @@ This guide also covers installing Goal Tracker as a Progressive Web App (PWA).
 
 ## First-Time Setup
 
-When you first open the app, it initializes its internal database automatically. New goals are created and updated directly inside the app.
+When you first open the app, it initializes its local database automatically. New goals are created and updated directly inside the app.
 
 ## How It Works
 
-- Goals are stored internally using IndexedDB.
+- Goals are stored locally using IndexedDB.
 - The same storage flow is used by the web app and the Capacitor wrapper.
-- No folder permissions or external sync setup are required.
+- No extra storage permissions or sync setup are required.
 
 ## Troubleshooting
 
 ### App data looks missing
 - Make sure you are opening the same app build and environment.
-- Internal storage is local to the installed app or browser profile.
+- App data is local to the installed app or browser profile.
 
 ### Native changes are not visible
 - Run `npm run build` and `npm run cap:sync` before reopening the native project.

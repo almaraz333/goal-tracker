@@ -1,6 +1,6 @@
 /**
  * Mock data for development and testing
- * Remove this file when connecting to real Obsidian API
+ * Use this file only when running the app with mock data enabled.
  */
 
 import type { Goal } from '@/types';
@@ -23,7 +23,7 @@ export const mockGoals: Goal[] = [
     ],
     tags: ['youtube', 'learning', 'obs'],
     category: 'YouTube',
-    filePath: 'Goals/YouTube/Learn OBS Basics.md',
+    filePath: 'YouTube/Learn OBS Basics.md',
   },
   {
     id: 'first-quantum-video',
@@ -42,7 +42,7 @@ export const mockGoals: Goal[] = [
     ],
     tags: ['youtube', 'quantum', 'weekly'],
     category: 'YouTube',
-    filePath: 'Goals/YouTube/First Quantum Computing Video.md',
+    filePath: 'YouTube/First Quantum Computing Video.md',
   },
   {
     id: 'three-videos-per-month',
@@ -61,7 +61,7 @@ export const mockGoals: Goal[] = [
     completions: [],
     tags: ['youtube', 'recurring', 'content'],
     category: 'YouTube',
-    filePath: 'Goals/YouTube/Three Videos Per Month.md',
+    filePath: 'YouTube/Three Videos Per Month.md',
   },
   {
     id: 'exercise-daily',
@@ -90,7 +90,7 @@ export const mockGoals: Goal[] = [
     },
     tags: ['health', 'fitness', 'habit'],
     category: 'Health',
-    filePath: 'Goals/Health/Exercise Daily.md',
+    filePath: 'Health/Exercise Daily.md',
   },
   {
     id: 'read-30-minutes',
@@ -116,7 +116,7 @@ export const mockGoals: Goal[] = [
     },
     tags: ['learning', 'habit', 'reading'],
     category: 'Life',
-    filePath: 'Goals/Life/Read 30 Minutes.md',
+    filePath: 'Life/Read 30 Minutes.md',
   },
   {
     id: 'weekly-review',
@@ -136,6 +136,6 @@ export const mockGoals: Goal[] = [
     ],
     tags: ['productivity', 'planning'],
     category: 'Work',
-    filePath: 'Goals/Work/Weekly Review.md',
+    filePath: 'Work/Weekly Review.md',
   },
 ];

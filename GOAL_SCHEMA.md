@@ -1,10 +1,10 @@
-# Goal File Schema
+# Goal Content Schema
 
-This document describes the YAML frontmatter format used in Goal Tracker markdown files.
+This document describes the YAML frontmatter format used in the markdown content stored by Goal Tracker.
 
-## File Structure
+## Stored Content Format
 
-Each goal is a markdown file (`.md`) with YAML frontmatter at the top:
+Each goal is stored as markdown content with YAML frontmatter at the top:
 
 ```markdown
 ---
@@ -144,23 +144,18 @@ recurrence:
   minimumCount: 2                                    # Optional: minimum for monthly goals
 ```
 
-## Folder Structure
+## Storage Key Structure
 
-Goals are organized in category folders:
+Goals use category-based storage keys:
 
 ```
-Goals/
-├── YouTube/
-│   ├── _category.md     # Optional: category metadata
-│   ├── Daily_test.md
-│   └── Weekly_goal.md
-├── Health/
-│   └── Exercise_daily.md
-└── Work/
-    └── Weekly_review.md
+YouTube/Daily_test.md
+YouTube/Weekly_goal.md
+Health/Exercise_daily.md
+Work/Weekly_review.md
 ```
 
-The folder name becomes the goal's `category` field.
+The leading path segment becomes the goal's `category` field.
 
 ## Best Practices
 

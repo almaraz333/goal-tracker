@@ -1,8 +1,8 @@
 /**
  * Goal Creation Modal
  * 
- * Form-based modal for creating new goals when using in-app storage mode.
- * Creates goals with proper markdown format and stores them in IndexedDB.
+ * Form-based modal for creating new goals.
+ * Creates goals with the app's markdown-based storage format.
  */
 
 import { useState, useMemo } from 'react';

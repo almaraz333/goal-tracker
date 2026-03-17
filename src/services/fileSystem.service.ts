@@ -1,8 +1,8 @@
 /**
- * File System Service for reading goal files
+ * Goal Markdown Service
  *
- * This service now focuses on markdown parsing and serialization for the
- * internal IndexedDB storage backend.
+ * This service handles markdown parsing and serialization for the
+ * local IndexedDB storage backend.
  */
 
 import type { Goal, GoalType, GoalStatus, Priority, Recurrence, Subtask, MonthlyProgress, DailySubtaskCompletions, WeeklySubtaskCompletions } from '@/types';

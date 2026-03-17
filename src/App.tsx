@@ -78,7 +78,7 @@ export function App() {
           return;
         }
 
-        // Load goals from the appropriate backend
+        // Load goals from storage
         const loadedGoals = await loadGoals();
         setGoals(loadedGoals);
         setLoading(false);

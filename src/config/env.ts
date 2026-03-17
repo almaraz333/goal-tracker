@@ -5,7 +5,7 @@
  */
 
 interface EnvConfig {
-  /** Whether to use mock data instead of real files */
+  /** Whether to use bundled mock goals instead of the local database */
   useMockData: boolean;
   /** Whether we're in development mode */
   isDev: boolean;

@@ -47,14 +47,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <Card className="p-3">
           <div className="flex items-center gap-2 mb-2">
             <HardDrive className="h-4 w-4 text-accent-secondary" />
-            <h3 className="text-base font-semibold text-text-primary">Storage</h3>
+            <h3 className="text-base font-semibold text-text-primary">Data</h3>
           </div>
           <div className="flex items-center gap-2 p-2 bg-bg-tertiary rounded-lg mb-3">
             <Smartphone className="h-4 w-4 text-status-success" />
-            <span className="text-sm text-text-primary">In-App Storage</span>
+            <span className="text-sm text-text-primary">Saved on this device</span>
           </div>
           <p className="text-xs text-text-muted">
-            Goals are stored internally using IndexedDB. The external folder workflow has been removed.
+            Goals and categories are saved automatically inside the app.
           </p>
         </Card>
 

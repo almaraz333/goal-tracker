@@ -12,15 +12,12 @@ export {
   type PlatformInfo,
 } from './platform.service';
 
-// Export storage adapter as the primary mechanism
+// Export the goal storage service as the primary persistence mechanism
 export { 
   saveGoal,
   deleteGoal,
   loadGoals, 
   initializeStorage,
-  getStorageMode,
-  isInAppStorageMode,
-  type StorageMode,
   type StorageState,
 } from './storage.service';
 

@@ -1,16 +1,14 @@
 /**
- * Apollo Client configuration for Obsidian Local REST API
+ * Apollo Client configuration placeholder for future API integrations.
  * 
- * Note: The Obsidian Local REST API plugin uses a REST interface,
- * not GraphQL. We'll set up Apollo Client for future GraphQL needs
- * and create a REST service layer for Obsidian communication.
+ * The current app stores goals locally and does not depend on a remote API.
  */
 
 import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
 
-// Default configuration - will be updated when connecting to actual API
+// Default configuration for future API usage.
 const httpLink = createHttpLink({
-  uri: 'http://localhost:27123/graphql', // Placeholder - adjust based on actual API
+  uri: 'http://localhost:27123/graphql',
 });
 
 export const apolloClient = new ApolloClient({

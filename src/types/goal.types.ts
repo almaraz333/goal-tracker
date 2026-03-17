@@ -1,6 +1,6 @@
 /**
  * Goal-related type definitions
- * These types mirror the YAML frontmatter structure in Obsidian notes
+ * These types mirror the YAML frontmatter structure stored by the app
  */
 
 export type GoalType = 'daily' | 'weekly' | 'monthly';
@@ -48,8 +48,8 @@ export interface Goal {
   completions: string[]; // Array of ISO date strings (for weekly goals: "YYYY-WXX")
   subtasks?: Subtask[];
   tags: string[];
-  category: string; // Folder name (e.g., "YouTube", "Work")
-  filePath: string; // Full path in Obsidian vault
+  category: string; // Category name (e.g., "YouTube", "Work")
+  filePath: string; // Stable storage key for the goal content
   monthlyProgress?: MonthlyProgress; // Track progress for monthly goals
   dailySubtaskCompletions?: DailySubtaskCompletions; // Track subtask completion per day for daily goals
   weeklySubtaskCompletions?: WeeklySubtaskCompletions; // Track subtask completion per week for weekly goals
