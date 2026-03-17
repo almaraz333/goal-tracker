@@ -11,7 +11,7 @@ import { formatDateDisplay, parseISODate } from '@/utils';
 interface DayDetailPageProps {
   dayData: CalendarDay;
   onBack: () => void;
-  onToggleTask: (goalId: string, subtaskId?: string) => void;
+  onToggleTask: (goalId: string) => void;
 }
 
 export function DayDetailPage({ dayData, onBack, onToggleTask }: DayDetailPageProps) {

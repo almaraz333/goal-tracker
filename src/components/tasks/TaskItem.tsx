@@ -18,10 +18,7 @@ const priorityVariants = {
 } as const;
 
 export function TaskItem({ task, onToggle }: TaskItemProps) {
-  const { goal, isCompleted, isSubtask, subtaskTitle } = task;
-  
-  const title = isSubtask ? subtaskTitle : goal.title;
-  const description = isSubtask ? `Part of: ${goal.title}` : goal.description;
+  const { goal, isCompleted } = task;
   
   return (
     <div
@@ -34,7 +31,7 @@ export function TaskItem({ task, onToggle }: TaskItemProps) {
       <Checkbox
         checked={isCompleted}
         onChange={onToggle}
-        aria-label={`Mark "${title}" as ${isCompleted ? 'incomplete' : 'complete'}`}
+        aria-label={`Mark "${goal.title}" as ${isCompleted ? 'incomplete' : 'complete'}`}
       />
       
       <div className="flex-1 min-w-0">
@@ -45,39 +42,18 @@ export function TaskItem({ task, onToggle }: TaskItemProps) {
               ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-100'}
             `}
           >
-            {title}
+            {goal.title}
           </span>
-          
-          {!isSubtask && (
-            <Badge variant={priorityVariants[goal.priority]} size="sm">
-              {goal.priority}
-            </Badge>
-          )}
+
+          <Badge variant={priorityVariants[goal.priority]} size="sm">
+            {goal.priority}
+          </Badge>
         </div>
         
-        {description && (
+        {goal.description && (
           <p className="text-xs text-gray-500 truncate">
-            {description}
+            {goal.description}
           </p>
-        )}
-        
-        {/* Tags */}
-        {!isSubtask && goal.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {goal.tags.slice(0, 3).map((tag) => (
-              <span
-                key={tag}
-                className="text-xs px-1.5 py-0.5 rounded bg-gray-700 text-gray-400"
-              >
-                #{tag}
-              </span>
-            ))}
-            {goal.tags.length > 3 && (
-              <span className="text-xs text-gray-500">
-                +{goal.tags.length - 3} more
-              </span>
-            )}
-          </div>
         )}
       </div>
       

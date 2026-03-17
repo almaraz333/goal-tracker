@@ -14,15 +14,6 @@ export const TOGGLE_COMPLETION = gql`
   }
 `;
 
-export const TOGGLE_SUBTASK = gql`
-  ${GOAL_FRAGMENT}
-  mutation ToggleSubtask($goalId: ID!, $subtaskId: String!) {
-    toggleSubtask(goalId: $goalId, subtaskId: $subtaskId) {
-      ...GoalFields
-    }
-  }
-`;
-
 export const UPDATE_GOAL = gql`
   ${GOAL_FRAGMENT}
   mutation UpdateGoal($id: ID!, $input: GoalInput!) {

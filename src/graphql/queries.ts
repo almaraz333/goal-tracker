@@ -16,7 +16,6 @@ export const GOAL_FRAGMENT = gql`
     endDate
     priority
     completions
-    tags
     category
     filePath
     recurrence {
@@ -25,11 +24,6 @@ export const GOAL_FRAGMENT = gql`
       dayOfMonth
       targetCount
       minimumCount
-    }
-    subtasks {
-      id
-      title
-      completed
     }
   }
 `;

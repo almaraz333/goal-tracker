@@ -5,7 +5,7 @@
  * local IndexedDB storage backend.
  */
 
-import type { Goal, GoalType, GoalStatus, Priority, Recurrence, Subtask, MonthlyProgress, DailySubtaskCompletions, WeeklySubtaskCompletions } from '@/types';
+import type { Goal, GoalType, GoalStatus, Priority, Recurrence, MonthlyProgress } from '@/types';
 
 /**
  * Parse YAML frontmatter from markdown content
@@ -204,6 +204,7 @@ export function frontmatterToGoal(
 ): Goal {
   const fileName = filePath.split('/').pop() ?? filePath;
   const id = fileName.replace('.md', '').replace(/\s+/g, '-').toLowerCase();
+  const goalType = (frontmatter.type as GoalType) ?? 'daily';
   
   // Parse recurrence
   const recurrenceData = frontmatter.recurrence as Record<string, unknown> | undefined;
@@ -214,14 +215,9 @@ export function frontmatterToGoal(
     targetCount: recurrenceData.targetCount as number | undefined,
     minimumCount: recurrenceData.minimumCount as number | undefined,
   } : undefined;
-  
-  // Parse subtasks
-  const subtasksData = frontmatter.subtasks as Array<Record<string, unknown>> | undefined;
-  const subtasks: Subtask[] | undefined = subtasksData?.map(st => ({
-    id: String(st.id),
-    title: String(st.title),
-    completed: Boolean(st.completed),
-  }));
+
+  const legacySubtasks = (frontmatter.subtasks as Array<Record<string, unknown>> | undefined) ?? [];
+  const legacySubtaskIds = legacySubtasks.map(subtask => String(subtask.id));
   
   // Parse monthlyProgress
   const monthlyProgressData = frontmatter.monthlyProgress as Record<string, unknown> | undefined;
@@ -230,41 +226,49 @@ export function frontmatterToGoal(
         Object.entries(monthlyProgressData).map(([k, v]) => [k, Number(v)])
       )
     : undefined;
-    
-  // Parse dailySubtaskCompletions
-  const dailySubtaskData = frontmatter.dailySubtaskCompletions as Record<string, unknown> | undefined;
-  const dailySubtaskCompletions: DailySubtaskCompletions | undefined = dailySubtaskData
-    ? Object.fromEntries(
-        Object.entries(dailySubtaskData).map(([k, v]) => [k, Array.isArray(v) ? v.map(String) : []])
-      )
-    : undefined;
 
-  // Parse weeklySubtaskCompletions
-  const weeklySubtaskData = frontmatter.weeklySubtaskCompletions as Record<string, unknown> | undefined;
-  const weeklySubtaskCompletions: WeeklySubtaskCompletions | undefined = weeklySubtaskData
-    ? Object.fromEntries(
-        Object.entries(weeklySubtaskData).map(([k, v]) => [k, Array.isArray(v) ? v.map(String) : []])
-      )
-    : undefined;
+  const completions = new Set(
+    Array.isArray(frontmatter.completions)
+      ? frontmatter.completions.map(String)
+      : []
+  );
+
+  if (goalType === 'daily' && legacySubtaskIds.length > 0) {
+    const legacyDailyCompletions = frontmatter.dailySubtaskCompletions as Record<string, unknown> | undefined;
+
+    Object.entries(legacyDailyCompletions ?? {}).forEach(([date, ids]) => {
+      const completedIds = Array.isArray(ids) ? ids.map(String) : [];
+      if (legacySubtaskIds.every(id => completedIds.includes(id))) {
+        completions.add(date);
+      }
+    });
+  }
+
+  if (goalType === 'weekly' && legacySubtaskIds.length > 0) {
+    const legacyWeeklyCompletions = frontmatter.weeklySubtaskCompletions as Record<string, unknown> | undefined;
+
+    Object.entries(legacyWeeklyCompletions ?? {}).forEach(([weekKey, ids]) => {
+      const completedIds = Array.isArray(ids) ? ids.map(String) : [];
+      if (legacySubtaskIds.every(id => completedIds.includes(id))) {
+        completions.add(weekKey);
+      }
+    });
+  }
   
   return {
     id,
     title: extractTitle(content),
     description: extractDescription(content),
-    type: (frontmatter.type as GoalType) ?? 'daily',
+    type: goalType,
     status: (frontmatter.status as GoalStatus) ?? 'active',
     startDate: String(frontmatter.startDate ?? new Date().toISOString().split('T')[0]),
     endDate: String(frontmatter.endDate ?? '2026-12-31'),
     recurrence,
     priority: (frontmatter.priority as Priority) ?? 'medium',
-    completions: (frontmatter.completions as string[]) ?? [],
-    subtasks,
-    tags: (frontmatter.tags as string[]) ?? [],
+    completions: Array.from(completions).sort(),
     category,
     filePath,
     monthlyProgress,
-    dailySubtaskCompletions,
-    weeklySubtaskCompletions,
   };
 }
 
@@ -282,42 +286,6 @@ export function serializeFrontmatter(goal: Goal): string {
   
   // Arrays
   lines.push(`completions: [${goal.completions.join(', ')}]`);
-  
-  // Subtasks
-  if (goal.subtasks && goal.subtasks.length > 0) {
-    lines.push('subtasks:');
-    goal.subtasks.forEach(st => {
-      lines.push(`  - id: ${st.id}`);
-      lines.push(`    title: ${st.title}`);
-      lines.push(`    completed: ${st.completed}`);
-    });
-  } else {
-    lines.push('subtasks: []');
-  }
-  
-  // Daily Subtask Completions
-  if (goal.dailySubtaskCompletions && Object.keys(goal.dailySubtaskCompletions).length > 0) {
-    lines.push('dailySubtaskCompletions:');
-    Object.entries(goal.dailySubtaskCompletions).forEach(([date, ids]) => {
-      if (ids.length > 0) {
-        lines.push(`  ${date}: [${ids.join(', ')}]`);
-      }
-    });
-  } else {
-    lines.push('dailySubtaskCompletions: {}');
-  }
-
-  // Weekly Subtask Completions
-  if (goal.weeklySubtaskCompletions && Object.keys(goal.weeklySubtaskCompletions).length > 0) {
-    lines.push('weeklySubtaskCompletions:');
-    Object.entries(goal.weeklySubtaskCompletions).forEach(([week, ids]) => {
-      if (ids.length > 0) {
-        lines.push(`  ${week}: [${ids.join(', ')}]`);
-      }
-    });
-  } else {
-    lines.push('weeklySubtaskCompletions: {}');
-  }
   
   // Monthly Progress
   if (goal.monthlyProgress && Object.keys(goal.monthlyProgress).length > 0) {
@@ -345,13 +313,6 @@ export function serializeFrontmatter(goal: Goal): string {
     if (goal.recurrence.daysOfWeek && goal.recurrence.daysOfWeek.length > 0) {
       lines.push(`  daysOfWeek: [${goal.recurrence.daysOfWeek.join(', ')}]`);
     }
-  }
-  
-  // Tags
-  if (goal.tags && goal.tags.length > 0) {
-    lines.push(`tags: [${goal.tags.join(', ')}]`);
-  } else {
-    lines.push('tags: []');
   }
 
   return lines.join('\n');

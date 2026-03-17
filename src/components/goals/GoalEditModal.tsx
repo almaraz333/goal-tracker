@@ -10,7 +10,6 @@ import {
   Save, 
   X, 
   Calendar, 
-  Tag, 
   Folder,
   Target,
   Clock,
@@ -19,7 +18,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { Modal, Button } from '@/components/ui';
-import type { Goal, GoalType, GoalStatus, Priority, Subtask } from '@/types';
+import type { Goal, GoalType, GoalStatus, Priority } from '@/types';
 import { saveGoalToIndexedDB, deleteGoalFromIndexedDB } from '@/services/indexedDbStorage.service';
 
 interface GoalEditModalProps {
@@ -40,12 +39,6 @@ interface FormData {
   startDate: string;
   endDate: string;
   category: string;
-  tags: string;
-  subtasks: Subtask[];
-}
-
-function generateSubtaskId(): string {
-  return `st_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
 export function GoalEditModal({ 
@@ -65,11 +58,8 @@ export function GoalEditModal({
     startDate: '',
     endDate: '',
     category: '',
-    tags: '',
-    subtasks: [],
   });
   
-  const [newSubtask, setNewSubtask] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -88,8 +78,6 @@ export function GoalEditModal({
         startDate: goal.startDate,
         endDate: goal.endDate,
         category: goal.category,
-        tags: goal.tags.join(', '),
-        subtasks: goal.subtasks ? [...goal.subtasks] : [],
       });
       setError(null);
       setShowDeleteConfirm(false);
@@ -102,26 +90,6 @@ export function GoalEditModal({
   const handleInputChange = (field: keyof FormData, value: string | GoalType | GoalStatus | Priority) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setError(null);
-  };
-
-  const handleAddSubtask = () => {
-    if (!newSubtask.trim()) return;
-    
-    setFormData(prev => ({
-      ...prev,
-      subtasks: [
-        ...prev.subtasks,
-        { id: generateSubtaskId(), title: newSubtask.trim(), completed: false },
-      ],
-    }));
-    setNewSubtask('');
-  };
-
-  const handleRemoveSubtask = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      subtasks: prev.subtasks.filter(st => st.id !== id),
-    }));
   };
 
   const handleAddNewCategory = () => {
@@ -148,12 +116,6 @@ export function GoalEditModal({
     setError(null);
 
     try {
-      // Parse tags
-      const tags = formData.tags
-        .split(',')
-        .map(t => t.trim())
-        .filter(t => t.length > 0);
-
       // Create updated goal object (preserve existing completions and progress)
       const updatedGoal: Goal = {
         ...goal,
@@ -165,8 +127,6 @@ export function GoalEditModal({
         startDate: formData.startDate,
         endDate: formData.endDate,
         category: formData.category,
-        subtasks: formData.subtasks.length > 0 ? formData.subtasks : undefined,
-        tags,
       };
 
       // Save to IndexedDB
@@ -372,64 +332,6 @@ export function GoalEditModal({
               </Button>
             </div>
           )}
-        </div>
-
-        {/* Tags */}
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
-            <Tag className="h-3 w-3 inline mr-1" />
-            Tags
-          </label>
-          <input
-            type="text"
-            value={formData.tags}
-            onChange={(e) => handleInputChange('tags', e.target.value)}
-            placeholder="Enter tags separated by commas..."
-            className="w-full px-3 py-2 bg-bg-tertiary border border-border-primary rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
-          />
-          <p className="text-xs text-text-muted mt-1">Separate multiple tags with commas</p>
-        </div>
-
-        {/* Subtasks */}
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
-            Subtasks
-          </label>
-          
-          {/* Existing subtasks */}
-          {formData.subtasks.length > 0 && (
-            <div className="space-y-2 mb-2">
-              {formData.subtasks.map((subtask) => (
-                <div 
-                  key={subtask.id}
-                  className="flex items-center gap-2 p-2 bg-bg-tertiary rounded-lg"
-                >
-                  <span className="flex-1 text-sm text-text-primary">{subtask.title}</span>
-                  <button
-                    onClick={() => handleRemoveSubtask(subtask.id)}
-                    className="p-1 text-text-muted hover:text-status-danger transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {/* Add subtask input */}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newSubtask}
-              onChange={(e) => setNewSubtask(e.target.value)}
-              placeholder="Add a subtask..."
-              className="flex-1 px-3 py-2 bg-bg-tertiary border border-border-primary rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
-              onKeyDown={(e) => e.key === 'Enter' && handleAddSubtask()}
-            />
-            <Button onClick={handleAddSubtask} variant="ghost" size="sm" disabled={!newSubtask.trim()}>
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
 
         {/* Delete Confirmation */}

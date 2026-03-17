@@ -102,19 +102,7 @@ export function isGoalCompletedOnDate(goal: Goal, date: Date): boolean {
 export function isWeeklyGoalCompletedForWeek(goal: Goal, weekInfo: WeekInfo): boolean {
   // Use startDate (Monday) directly as the key
   const weekKey = weekInfo.startDate;
-  
-  if (goal.completions.includes(weekKey)) {
-    return true;
-  }
-  
-  // If goal has subtasks, check if all are completed for this week
-  if (goal.subtasks && goal.subtasks.length > 0) {
-    const completedSubtasks = goal.weeklySubtaskCompletions?.[weekKey] || [];
-    if (completedSubtasks.length < goal.subtasks.length) return false;
-    return goal.subtasks.every(st => completedSubtasks.includes(st.id));
-  }
-  
-  return false;
+  return goal.completions.includes(weekKey);
 }
 
 /**
@@ -144,36 +132,6 @@ export function getWeeklyGoalsForWeek(goals: Goal[], weekInfo: WeekInfo): Goal[]
  */
 export function getMonthlyGoalsForMonth(goals: Goal[], year: number, month: number): Goal[] {
   return goals.filter(goal => isMonthlyGoalActiveForMonth(goal, year, month));
-}
-
-/**
- * Check if a subtask is completed on a specific date for a daily goal
- */
-export function isSubtaskCompletedOnDate(goal: Goal, subtaskId: string, date: Date): boolean {
-  if (goal.type !== 'daily') return false;
-  const dateStr = formatDateToISO(date);
-  const completedSubtasks = goal.dailySubtaskCompletions?.[dateStr] ?? [];
-  return completedSubtasks.includes(subtaskId);
-}
-
-/**
- * Get all completed subtask IDs for a specific date
- */
-export function getCompletedSubtasksForDate(goal: Goal, date: Date): string[] {
-  if (goal.type !== 'daily') return [];
-  const dateStr = formatDateToISO(date);
-  return goal.dailySubtaskCompletions?.[dateStr] ?? [];
-}
-
-/**
- * Check if all subtasks are completed on a specific date for a daily goal
- */
-export function areAllSubtasksCompletedOnDate(goal: Goal, date: Date): boolean {
-  if (goal.type !== 'daily') return false;
-  if (!goal.subtasks || goal.subtasks.length === 0) return false;
-  
-  const completedSubtasks = getCompletedSubtasksForDate(goal, date);
-  return goal.subtasks.every(subtask => completedSubtasks.includes(subtask.id));
 }
 
 /**

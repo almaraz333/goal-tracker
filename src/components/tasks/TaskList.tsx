@@ -7,7 +7,7 @@ import { TaskItem } from './TaskItem';
 
 interface TaskListProps {
   tasks: DayTask[];
-  onToggleTask: (goalId: string, subtaskId?: string) => void;
+  onToggleTask: (goalId: string) => void;
   emptyMessage?: string;
 }
 
@@ -55,9 +55,9 @@ export function TaskList({
           <div className="space-y-2">
             {incompleteTasks.map((task) => (
               <TaskItem
-                key={`${task.goalId}-${task.subtaskId ?? 'main'}`}
+                key={task.goalId}
                 task={task}
-                onToggle={() => onToggleTask(task.goalId, task.subtaskId)}
+                onToggle={() => onToggleTask(task.goalId)}
               />
             ))}
           </div>
@@ -73,9 +73,9 @@ export function TaskList({
           <div className="space-y-2">
             {completedTasks.map((task) => (
               <TaskItem
-                key={`${task.goalId}-${task.subtaskId ?? 'main'}`}
+                key={task.goalId}
                 task={task}
-                onToggle={() => onToggleTask(task.goalId, task.subtaskId)}
+                onToggle={() => onToggleTask(task.goalId)}
               />
             ))}
           </div>

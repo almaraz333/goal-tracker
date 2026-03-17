@@ -10,15 +10,13 @@ import {
   Plus, 
   X, 
   Calendar, 
-  Tag, 
   Folder,
   Target,
   Clock,
   AlertCircle,
-  Trash2,
 } from 'lucide-react';
 import { Modal, Button } from '@/components/ui';
-import type { Goal, GoalType, GoalStatus, Priority, Subtask } from '@/types';
+import type { Goal, GoalType, GoalStatus, Priority } from '@/types';
 import { generateGoalFilePath, saveGoalToIndexedDB, saveCategoryToIndexedDB } from '@/services/indexedDbStorage.service';
 
 interface GoalCreationModalProps {
@@ -37,15 +35,9 @@ interface FormData {
   startDate: string;
   endDate: string;
   category: string;
-  tags: string;
-  subtasks: Array<{ id: string; title: string }>;
 }
 
 const DEFAULT_END_DATE = '2026-12-31';
-
-function generateSubtaskId(): string {
-  return `st_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
 
 export function GoalCreationModal({ 
   isOpen, 
@@ -64,11 +56,8 @@ export function GoalCreationModal({
     startDate: today,
     endDate: DEFAULT_END_DATE,
     category: existingCategories[0] || 'General',
-    tags: '',
-    subtasks: [],
   });
   
-  const [newSubtask, setNewSubtask] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showNewCategory, setShowNewCategory] = useState(false);
@@ -83,26 +72,6 @@ export function GoalCreationModal({
   const handleInputChange = (field: keyof FormData, value: string | GoalType | GoalStatus | Priority) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setError(null);
-  };
-
-  const handleAddSubtask = () => {
-    if (!newSubtask.trim()) return;
-    
-    setFormData(prev => ({
-      ...prev,
-      subtasks: [
-        ...prev.subtasks,
-        { id: generateSubtaskId(), title: newSubtask.trim() },
-      ],
-    }));
-    setNewSubtask('');
-  };
-
-  const handleRemoveSubtask = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      subtasks: prev.subtasks.filter(st => st.id !== id),
-    }));
   };
 
   const handleAddNewCategory = () => {
@@ -131,19 +100,6 @@ export function GoalCreationModal({
     try {
       // Generate file path
       const filePath = generateGoalFilePath(formData.title, formData.category);
-      
-      // Create subtasks array
-      const subtasks: Subtask[] = formData.subtasks.map(st => ({
-        id: st.id,
-        title: st.title,
-        completed: false,
-      }));
-
-      // Parse tags
-      const tags = formData.tags
-        .split(',')
-        .map(t => t.trim())
-        .filter(t => t.length > 0);
 
       // Create goal object
       const goal: Goal = {
@@ -158,10 +114,6 @@ export function GoalCreationModal({
         category: formData.category,
         filePath,
         completions: [],
-        subtasks: subtasks.length > 0 ? subtasks : undefined,
-        tags,
-        dailySubtaskCompletions: formData.type === 'daily' ? {} : undefined,
-        weeklySubtaskCompletions: formData.type === 'weekly' ? {} : undefined,
         monthlyProgress: formData.type === 'monthly' ? {} : undefined,
       };
 
@@ -197,10 +149,7 @@ export function GoalCreationModal({
       startDate: today,
       endDate: DEFAULT_END_DATE,
       category: existingCategories[0] || 'General',
-      tags: '',
-      subtasks: [],
     });
-    setNewSubtask('');
     setError(null);
     setShowNewCategory(false);
     setNewCategory('');
@@ -212,8 +161,8 @@ export function GoalCreationModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Create New Goal">
-      <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Create New Goal" size="lg">
+      <div className="space-y-4 max-h-[70vh] overflow-y-auto px-2 sm:px-3 md:px-4">
         {/* Error message */}
         {error && (
           <div className="flex items-center gap-2 p-3 bg-status-danger-bg border border-status-danger-border rounded-lg">
@@ -361,64 +310,6 @@ export function GoalCreationModal({
               </Button>
             </div>
           )}
-        </div>
-
-        {/* Tags */}
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
-            <Tag className="h-3 w-3 inline mr-1" />
-            Tags
-          </label>
-          <input
-            type="text"
-            value={formData.tags}
-            onChange={(e) => handleInputChange('tags', e.target.value)}
-            placeholder="Enter tags separated by commas..."
-            className="w-full px-3 py-2 bg-bg-tertiary border border-border-primary rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
-          />
-          <p className="text-xs text-text-muted mt-1">Separate multiple tags with commas</p>
-        </div>
-
-        {/* Subtasks */}
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">
-            Subtasks
-          </label>
-          
-          {/* Existing subtasks */}
-          {formData.subtasks.length > 0 && (
-            <div className="space-y-2 mb-2">
-              {formData.subtasks.map((subtask) => (
-                <div 
-                  key={subtask.id}
-                  className="flex items-center gap-2 p-2 bg-bg-tertiary rounded-lg"
-                >
-                  <span className="flex-1 text-sm text-text-primary">{subtask.title}</span>
-                  <button
-                    onClick={() => handleRemoveSubtask(subtask.id)}
-                    className="p-1 text-text-muted hover:text-status-danger transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {/* Add subtask input */}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={newSubtask}
-              onChange={(e) => setNewSubtask(e.target.value)}
-              placeholder="Add a subtask..."
-              className="flex-1 px-3 py-2 bg-bg-tertiary border border-border-primary rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-accent-primary"
-              onKeyDown={(e) => e.key === 'Enter' && handleAddSubtask()}
-            />
-            <Button onClick={handleAddSubtask} variant="ghost" size="sm" disabled={!newSubtask.trim()}>
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
 
         {/* Actions */}

@@ -14,7 +14,7 @@ import { parseISODate, getMonthName } from '@/utils';
 interface CalendarMonthViewProps {
   goals: Goal[];
   onDaySelect: (date: Date) => void;
-  onToggleWeeklySubtask: (goalId: string, subtaskId: string, weekKey: string) => void;
+  onToggleWeeklyCompletion: (goalId: string, weekKey: string) => void;
   onIncrementMonthlyProgress: (goalId: string, monthKey: string) => void;
   onDecrementMonthlyProgress: (goalId: string, monthKey: string) => void;
 }
@@ -22,7 +22,7 @@ interface CalendarMonthViewProps {
 export function CalendarMonthView({ 
   goals, 
   onDaySelect,
-  onToggleWeeklySubtask,
+  onToggleWeeklyCompletion,
   onIncrementMonthlyProgress,
   onDecrementMonthlyProgress,
 }: CalendarMonthViewProps) {
@@ -100,7 +100,7 @@ export function CalendarMonthView({
             weeks={calendarMonth.weeks}
             selectedWeekIndex={selectedWeekIndex}
             onWeekSelect={handleWeekSelect}
-            onToggleWeeklySubtask={onToggleWeeklySubtask}
+            onToggleWeeklyCompletion={onToggleWeeklyCompletion}
           />
         )}
       </div>

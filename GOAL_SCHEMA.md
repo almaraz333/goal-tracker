@@ -14,14 +14,6 @@ startDate: 2026-01-01
 endDate: 2026-12-31
 priority: high
 completions: []
-subtasks:
-  - id: task1
-    title: First subtask
-    completed: false
-dailySubtaskCompletions:
-  2026-01-05: [task1]
-weeklySubtaskCompletions: {}
-tags: [health, habit]
 ---
 
 # Goal Title
@@ -41,15 +33,11 @@ Description and notes go here in markdown format.
 | `endDate` | `YYYY-MM-DD` | When the goal ends |
 | `priority` | `'high' \| 'medium' \| 'low'` | Priority level |
 | `completions` | `string[]` | Array of completion dates/keys |
-| `tags` | `string[]` | Tags for categorization |
 
 ### Optional Fields
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `subtasks` | `Subtask[]` | List of subtasks (see below) |
-| `dailySubtaskCompletions` | `Record<date, subtaskId[]>` | Tracks subtask completion per day (daily goals) |
-| `weeklySubtaskCompletions` | `Record<weekKey, subtaskId[]>` | Tracks subtask completion per week (weekly goals) |
 | `monthlyProgress` | `Record<monthKey, number>` | Progress count per month (monthly goals) |
 | `recurrence` | `Recurrence` | Recurrence rules (see below) |
 
@@ -60,21 +48,14 @@ Description and notes go here in markdown format.
 Daily goals are tracked per day. Each day is independent.
 
 **Key fields:**
-- `dailySubtaskCompletions`: Maps dates (`YYYY-MM-DD`) to arrays of completed subtask IDs
+- `completions`: Stores completed dates as `YYYY-MM-DD`
 
 **Example:**
 ```yaml
 type: daily
-subtasks:
-  - id: warmup
-    title: Warm up (5 min)
-    completed: false
-  - id: cardio
-    title: Cardio (20 min)
-    completed: false
-dailySubtaskCompletions:
-  2026-01-05: [warmup, cardio]
-  2026-01-06: [warmup]
+completions:
+  - 2026-01-05
+  - 2026-01-06
 ```
 
 ### Weekly Goals
@@ -83,20 +64,13 @@ Weekly goals are tracked per week (Monday-Sunday).
 
 **Key fields:**
 - `completions`: Array of week keys (ISO date of Monday, e.g., `"2026-01-05"`)
-- `weeklySubtaskCompletions`: Maps week keys to arrays of completed subtask IDs
 
 **Example:**
 ```yaml
 type: weekly
-subtasks:
-  - id: research
-    title: Research topic
-    completed: false
-  - id: write
-    title: Write draft
-    completed: false
-weeklySubtaskCompletions:
-  2026-01-05: [research, write]
+completions:
+  - 2026-01-05
+  - 2026-01-12
 ```
 
 ### Monthly Goals
@@ -119,19 +93,6 @@ monthlyProgress:
   2026-01: 2
   2026-02: 3
 ```
-
-## Subtask Schema
-
-```yaml
-subtasks:
-  - id: unique-id      # Required: unique identifier
-    title: Task title  # Required: display name
-    completed: false   # Required: default completion state
-```
-
-**Notes:**
-- The `completed` field is the default state, not the current state
-- Actual completion is tracked in `dailySubtaskCompletions` or `weeklySubtaskCompletions`
 
 ## Recurrence Schema
 
@@ -159,14 +120,14 @@ The leading path segment becomes the goal's `category` field.
 
 ## Best Practices
 
-1. **Use descriptive IDs**: Subtask IDs should be readable (e.g., `research`, `write`) not generic (`task1`)
-2. **Keep tags consistent**: Use the same tags across related goals for filtering
-3. **Set realistic dates**: `startDate` and `endDate` define when a goal appears in the calendar
-4. **Use subtasks**: Break down goals into actionable subtasks for better tracking
+1. **Use clear titles**: The title is the primary label shown across the app
+2. **Set realistic dates**: `startDate` and `endDate` define when a goal appears in the calendar
+3. **Use monthly targets when needed**: Monthly goals should use `recurrence.targetCount` and `minimumCount`
+4. **Keep descriptions focused**: Use the markdown body for notes, context, or success criteria
 
 ## Example Files
 
-### Daily Goal with Subtasks
+### Daily Goal
 
 ```markdown
 ---
@@ -176,18 +137,6 @@ startDate: 2026-01-01
 endDate: 2026-12-31
 priority: high
 completions: []
-subtasks:
-  - id: warmup
-    title: Warm up (5 min)
-    completed: false
-  - id: exercise
-    title: Main exercise (25 min)
-    completed: false
-  - id: cooldown
-    title: Cool down (5 min)
-    completed: false
-dailySubtaskCompletions: {}
-tags: [health, fitness, habit]
 ---
 
 # Daily Exercise
@@ -209,15 +158,6 @@ startDate: 2026-01-01
 endDate: 2026-03-31
 priority: medium
 completions: []
-subtasks:
-  - id: review
-    title: Review past week
-    completed: false
-  - id: plan
-    title: Plan next week
-    completed: false
-weeklySubtaskCompletions: {}
-tags: [productivity, planning]
 ---
 
 # Weekly Review
@@ -240,7 +180,6 @@ recurrence:
 priority: high
 completions: []
 monthlyProgress: {}
-tags: [content, youtube]
 ---
 
 # Monthly Video Production
@@ -251,4 +190,9 @@ Publish 4 videos per month (minimum 2).
 - Target: 4 videos/month
 - Acceptable: 2-3 videos/month
 - Below 2 counts as incomplete
+
+## Legacy Notes
+
+Older goal files may still contain `subtasks`, `dailySubtaskCompletions`, or `weeklySubtaskCompletions`.
+The app reads those fields only to migrate historical completion data into `completions` and does not write them back out.
 ```

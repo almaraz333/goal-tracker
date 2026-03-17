@@ -29,12 +29,6 @@ export interface Recurrence {
   minimumCount?: number;
 }
 
-export interface Subtask {
-  id: string;
-  title: string;
-  completed: boolean;
-}
-
 export interface Goal {
   id: string;
   title: string;
@@ -45,14 +39,10 @@ export interface Goal {
   endDate: string; // ISO date string
   recurrence?: Recurrence;
   priority: Priority;
-  completions: string[]; // Array of ISO date strings (for weekly goals: "YYYY-WXX")
-  subtasks?: Subtask[];
-  tags: string[];
+  completions: string[]; // ISO dates for daily goals, Monday ISO dates for weekly goals
   category: string; // Category name (e.g., "YouTube", "Work")
   filePath: string; // Stable storage key for the goal content
   monthlyProgress?: MonthlyProgress; // Track progress for monthly goals
-  dailySubtaskCompletions?: DailySubtaskCompletions; // Track subtask completion per day for daily goals
-  weeklySubtaskCompletions?: WeeklySubtaskCompletions; // Track subtask completion per week for weekly goals
 }
 
 export interface Category {
@@ -67,20 +57,4 @@ export interface Category {
 
 export interface MonthlyProgress {
   [yearMonth: string]: number; // e.g., "2026-03": 2
-}
-
-/**
- * Tracks which subtasks are completed on which days for daily goals
- * Key is ISO date string, value is array of completed subtask IDs
- */
-export interface DailySubtaskCompletions {
-  [date: string]: string[]; // e.g., "2026-01-05": ["subtask1", "subtask2"]
-}
-
-/**
- * Tracks which subtasks are completed for which weeks for weekly goals
- * Key is week key string (YYYY-WXX), value is array of completed subtask IDs
- */
-export interface WeeklySubtaskCompletions {
-  [weekKey: string]: string[]; // e.g., "2026-W05": ["subtask1", "subtask2"]
 }

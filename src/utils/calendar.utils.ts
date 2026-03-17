@@ -27,6 +27,7 @@ import {
 } from './date.utils';
 import { 
   isDailyGoalActiveOnDate, 
+  isGoalCompletedOnDate,
   sortGoalsByPriority,
   getWeeklyGoalsForWeek,
   isWeeklyGoalCompletedForWeek,
@@ -108,8 +109,7 @@ export function calculateWeekStatus(weeklyGoals: WeeklyGoalTask[], weekInfo: Wee
 }
 
 /**
- * Get DAILY tasks for a specific day
- * For daily goals with subtasks, we track completion per-day using dailySubtaskCompletions
+ * Get daily goal items for a specific day.
  */
 export function getTasksForDay(goals: Goal[], date: Date): DayTask[] {
   const tasks: DayTask[] = [];
@@ -120,24 +120,12 @@ export function getTasksForDay(goals: Goal[], date: Date): DayTask[] {
     if (!isDailyGoalActiveOnDate(goal, date)) {
       continue;
     }
-    
-    // Daily goals require subtasks - if no subtasks, nothing to show
-    if (goal.subtasks && goal.subtasks.length > 0) {
-      const dateStr = formatDateToISO(date);
-      const completedSubtasksToday = goal.dailySubtaskCompletions?.[dateStr] ?? [];
-      
-      for (const subtask of goal.subtasks) {
-        tasks.push({
-          goalId: goal.id,
-          goal,
-          isCompleted: completedSubtasksToday.includes(subtask.id),
-          isSubtask: true,
-          subtaskId: subtask.id,
-          subtaskTitle: subtask.title,
-        });
-      }
-    }
-    // No subtasks = nothing to check off (per user requirement)
+
+    tasks.push({
+      goalId: goal.id,
+      goal,
+      isCompleted: isGoalCompletedOnDate(goal, date),
+    });
   }
   
   return tasks;

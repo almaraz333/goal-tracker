@@ -27,9 +27,6 @@ export interface DayTask {
   goalId: string;
   goal: Goal;
   isCompleted: boolean;
-  isSubtask: boolean;
-  subtaskId?: string;
-  subtaskTitle?: string;
 }
 
 export interface CalendarWeek {

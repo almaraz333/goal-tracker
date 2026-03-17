@@ -11,7 +11,7 @@ import { GoalsListModal } from '@/components/goals';
 interface CalendarPageProps {
   goals: Goal[];
   onDaySelect: (date: Date) => void;
-  onToggleWeeklySubtask: (goalId: string, subtaskId: string, weekKey: string) => void;
+  onToggleWeeklyCompletion: (goalId: string, weekKey: string) => void;
   onIncrementMonthlyProgress: (goalId: string, monthKey: string) => void;
   onDecrementMonthlyProgress: (goalId: string, monthKey: string) => void;
   onGoalUpdated?: (goal: Goal) => void;
@@ -22,7 +22,7 @@ interface CalendarPageProps {
 export function CalendarPage({ 
   goals, 
   onDaySelect,
-  onToggleWeeklySubtask,
+  onToggleWeeklyCompletion,
   onIncrementMonthlyProgress,
   onDecrementMonthlyProgress,
   onGoalUpdated,
@@ -71,7 +71,7 @@ export function CalendarPage({
       <CalendarMonthView 
         goals={goals} 
         onDaySelect={onDaySelect}
-        onToggleWeeklySubtask={onToggleWeeklySubtask}
+        onToggleWeeklyCompletion={onToggleWeeklyCompletion}
         onIncrementMonthlyProgress={onIncrementMonthlyProgress}
         onDecrementMonthlyProgress={onDecrementMonthlyProgress}
       />

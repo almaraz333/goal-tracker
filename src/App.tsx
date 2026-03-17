@@ -28,12 +28,14 @@ export function App() {
     viewMode,
     selectedDate,
     setGoals,
+    addGoal,
+    removeGoal,
     setLoading,
     setError,
     setSelectedDate,
     setViewMode,
-    toggleDailySubtask,
-    toggleWeeklySubtask,
+    toggleCompletion,
+    toggleWeeklyCompletion,
     updateMonthlyProgress,
     updateGoal,
   } = useAppStore();
@@ -94,8 +96,8 @@ export function App() {
 
   // Handle goal created
   const handleGoalCreated = useCallback((goal: Goal) => {
-    setGoals([...goals, goal]);
-  }, [goals, setGoals]);
+    addGoal(goal);
+  }, [addGoal]);
 
   // Handle goal updated (from edit modal)
   const handleGoalUpdated = useCallback((updatedGoal: Goal) => {
@@ -104,8 +106,8 @@ export function App() {
 
   // Handle goal deleted
   const handleGoalDeleted = useCallback((goalId: string) => {
-    setGoals(goals.filter(g => g.id !== goalId));
-  }, [goals, setGoals]);
+    removeGoal(goalId);
+  }, [removeGoal]);
 
   // Handle day selection
   const handleDaySelect = useCallback((date: Date) => {
@@ -119,19 +121,18 @@ export function App() {
     setViewMode('month');
   }, [setSelectedDate, setViewMode]);
 
-  // Handle task toggle (daily goals with subtasks)
-  const handleToggleTask = useCallback((goalId: string, subtaskId?: string) => {
-    if (subtaskId && selectedDate) {
+  // Handle daily goal completion toggle
+  const handleToggleTask = useCallback((goalId: string) => {
+    if (selectedDate) {
       const dateStr = formatDateToISO(selectedDate);
-      toggleDailySubtask(goalId, subtaskId, dateStr);
+      toggleCompletion(goalId, dateStr);
     }
-    // Daily goals without subtasks have nothing to toggle (per user requirement)
-  }, [selectedDate, toggleDailySubtask]);
+  }, [selectedDate, toggleCompletion]);
 
-  // Handle weekly goal subtask toggle
-  const handleToggleWeeklySubtask = useCallback((goalId: string, subtaskId: string, weekKey: string) => {
-    toggleWeeklySubtask(goalId, subtaskId, weekKey);
-  }, [toggleWeeklySubtask]);
+  // Handle weekly goal completion toggle
+  const handleToggleWeeklyCompletion = useCallback((goalId: string, weekKey: string) => {
+    toggleWeeklyCompletion(goalId, weekKey);
+  }, [toggleWeeklyCompletion]);
 
   // Handle monthly goal increment
   const handleIncrementMonthlyProgress = useCallback((goalId: string, monthKey: string) => {
@@ -182,7 +183,7 @@ export function App() {
           <CalendarPage
             goals={goals}
             onDaySelect={handleDaySelect}
-            onToggleWeeklySubtask={handleToggleWeeklySubtask}
+            onToggleWeeklyCompletion={handleToggleWeeklyCompletion}
             onIncrementMonthlyProgress={handleIncrementMonthlyProgress}
             onDecrementMonthlyProgress={handleDecrementMonthlyProgress}
             onGoalUpdated={handleGoalUpdated}
@@ -199,7 +200,7 @@ export function App() {
           <CalendarPage
             goals={goals}
             onDaySelect={handleDaySelect}
-            onToggleWeeklySubtask={handleToggleWeeklySubtask}
+            onToggleWeeklyCompletion={handleToggleWeeklyCompletion}
             onIncrementMonthlyProgress={handleIncrementMonthlyProgress}
             onDecrementMonthlyProgress={handleDecrementMonthlyProgress}
             onGoalUpdated={handleGoalUpdated}

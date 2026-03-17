@@ -3,21 +3,21 @@
  */
 
 import { Calendar } from 'lucide-react';
+import { Checkbox, Card } from '@/components/ui';
 import type { CalendarWeek, WeeklyGoalTask } from '@/types';
-import { Card } from '@/components/ui';
 
 interface WeeklySidebarProps {
   weeks: CalendarWeek[];
   selectedWeekIndex: number | null;
   onWeekSelect: (weekIndex: number) => void;
-  onToggleWeeklySubtask: (goalId: string, subtaskId: string, weekKey: string) => void;
+  onToggleWeeklyCompletion: (goalId: string, weekKey: string) => void;
 }
 
 export function WeeklySidebar({ 
   weeks, 
   selectedWeekIndex, 
   onWeekSelect,
-  onToggleWeeklySubtask
+  onToggleWeeklyCompletion
 }: WeeklySidebarProps) {
   // Find the week to display (selected or first with goals)
   const displayWeekIndex = selectedWeekIndex !== null && selectedWeekIndex < weeks.length
@@ -90,8 +90,7 @@ export function WeeklySidebar({
               <WeeklyGoalItem 
                 key={task.goalId} 
                 task={task}
-                weekKey={task.weekKey}
-                onToggleSubtask={(subtaskId: string) => onToggleWeeklySubtask(task.goalId, subtaskId, task.weekKey)}
+                onToggleCompletion={() => onToggleWeeklyCompletion(task.goalId, task.weekKey)}
               />
             ))}
           </div>
@@ -107,92 +106,38 @@ export function WeeklySidebar({
 
 interface WeeklyGoalItemProps {
   task: WeeklyGoalTask;
-  weekKey: string;
-  onToggleSubtask: (subtaskId: string) => void;
+  onToggleCompletion: () => void;
 }
 
-import { useState } from 'react';
-
-function WeeklyGoalItem({ task, weekKey, onToggleSubtask }: WeeklyGoalItemProps) {
-  const [open, setOpen] = useState(false);
-  const subtasks = task.goal.subtasks || [];
-  
-  // Get completed subtasks for this specific week
-  const weekCompletedSubtasks = task.goal.weeklySubtaskCompletions?.[weekKey] || [];
-  
-  // Map subtasks with completion status for this week
-  const subtasksWithWeeklyStatus = subtasks.map(st => ({
-    ...st,
-    completed: weekCompletedSubtasks.includes(st.id)
-  }));
-  
-  const completedCount = subtasksWithWeeklyStatus.filter(st => st.completed).length;
-  const totalCount = subtasks.length;
-  const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+function WeeklyGoalItem({ task, onToggleCompletion }: WeeklyGoalItemProps) {
+  const priorityClasses = {
+    high: 'bg-red-900/50 text-red-300',
+    medium: 'bg-yellow-900/50 text-yellow-300',
+    low: 'bg-gray-700 text-gray-400',
+  } as const;
 
   return (
     <div className="w-full p-3 rounded-lg bg-gray-800">
-      <div className="flex items-center gap-2 cursor-pointer" onClick={() => setOpen(v => !v)}>
+      <div className="flex items-start gap-3">
+        <Checkbox
+          checked={task.isCompleted}
+          onChange={onToggleCompletion}
+          aria-label={`Mark "${task.goal.title}" as ${task.isCompleted ? 'incomplete' : 'complete'}`}
+          className="pt-0.5"
+        />
         <div className="flex-1 min-w-0">
-          <p className={`font-medium ${task.isCompleted ? 'text-green-300 line-through' : 'text-gray-200'}`}>{task.goal.title}</p>
+          <p className={`font-medium text-sm ${task.isCompleted ? 'text-green-300 line-through' : 'text-gray-200'}`}>
+            {task.goal.title}
+          </p>
           {task.goal.description && (
-            <p className="text-xs text-gray-500 mt-1 truncate">{task.goal.description}</p>
+            <p className="text-xs text-gray-500 mt-1">{task.goal.description}</p>
           )}
+          <p className="text-xs text-gray-500 mt-2">{task.goal.category}</p>
         </div>
-        <span className={`text-xs px-2 py-1 rounded flex-shrink-0 ${
-          task.goal.priority === 'high' 
-            ? 'bg-red-900/50 text-red-300' 
-            : task.goal.priority === 'medium'
-              ? 'bg-yellow-900/50 text-yellow-300'
-              : 'bg-gray-700 text-gray-400'
-        }`}>
+        <span className={`text-xs px-2 py-1 rounded flex-shrink-0 ${priorityClasses[task.goal.priority]}`}>
           {task.goal.priority}
         </span>
-        <button
-          className="ml-2 text-gray-400 hover:text-gray-200 focus:outline-none"
-          aria-label={open ? 'Collapse subtasks' : 'Expand subtasks'}
-          tabIndex={-1}
-        >
-          <span>{open ? '▾' : '▸'}</span>
-        </button>
       </div>
-      {/* Progress bar */}
-      {totalCount > 0 && (
-        <div className="mt-2 mb-1">
-          <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div
-              className={`h-full transition-all duration-300 ${
-                progress === 100
-                  ? 'bg-green-500'
-                  : progress >= 50
-                    ? 'bg-yellow-500'
-                    : 'bg-blue-500'
-              }`}
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <div className="text-xs text-gray-400 mt-1 text-right">
-            {completedCount}/{totalCount} subtasks complete
-          </div>
-        </div>
-      )}
-      {/* Subtasks dropdown */}
-      {open && totalCount > 0 && (
-        <div className="mt-2 space-y-1 pl-2">
-          {subtasksWithWeeklyStatus.map((subtask) => (
-            <div key={subtask.id} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={subtask.completed}
-                onChange={() => onToggleSubtask(subtask.id)}
-                className="form-checkbox h-4 w-4 text-blue-500 rounded"
-                tabIndex={0}
-              />
-              <span className={`text-sm ${subtask.completed ? 'line-through text-green-300' : 'text-gray-200'}`}>{subtask.title}</span>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

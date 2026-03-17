@@ -37,11 +37,10 @@ interface AppState {
   setViewMode: (mode: 'month' | 'day') => void;
   navigateMonth: (direction: 'prev' | 'next') => void;
   setGoals: (goals: Goal[]) => void;
+  addGoal: (goal: Goal) => void;
+  removeGoal: (goalId: string) => void;
   updateGoal: (goal: Goal) => void;
   toggleCompletion: (goalId: string, date: string) => void;
-  toggleSubtask: (goalId: string, subtaskId: string) => void;
-  toggleDailySubtask: (goalId: string, subtaskId: string, date: string) => void;
-  toggleWeeklySubtask: (goalId: string, subtaskId: string, weekKey: string) => void;
   toggleWeeklyCompletion: (goalId: string, weekKey: string) => void;
   updateMonthlyProgress: (goalId: string, monthKey: string, delta: number) => void;
   setLoading: (isLoading: boolean) => void;
@@ -86,6 +85,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   
   // Goals actions
   setGoals: (goals) => set({ goals }),
+
+  addGoal: (goal) => set((state) => ({
+    goals: [...state.goals, goal],
+  })),
+
+  removeGoal: (goalId) => set((state) => ({
+    goals: state.goals.filter(goal => goal.id !== goalId),
+  })),
   
   updateGoal: (updatedGoal) => {
     saveGoal(updatedGoal);
@@ -110,77 +117,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       return updatedGoal;
     });
     
-    if (updatedGoal) saveGoal(updatedGoal);
-    return { goals };
-  }),
-  
-  toggleSubtask: (goalId, subtaskId) => set((state) => {
-    let updatedGoal: Goal | undefined;
-    const goals = state.goals.map(goal => {
-      if (goal.id !== goalId || !goal.subtasks) return goal;
-      
-      const subtasks = goal.subtasks.map(st =>
-        st.id === subtaskId ? { ...st, completed: !st.completed } : st
-      );
-      
-      updatedGoal = { ...goal, subtasks };
-      return updatedGoal;
-    });
-    
-    if (updatedGoal) saveGoal(updatedGoal);
-    return { goals };
-  }),
-  
-  // Toggle daily subtask completion for a specific date
-  toggleDailySubtask: (goalId, subtaskId, date) => set((state) => {
-    let updatedGoal: Goal | undefined;
-    const goals = state.goals.map(goal => {
-      if (goal.id !== goalId) return goal;
-      
-      const currentCompletions = goal.dailySubtaskCompletions ?? {};
-      const dayCompletions = currentCompletions[date] ?? [];
-      
-      const newDayCompletions = dayCompletions.includes(subtaskId)
-        ? dayCompletions.filter(id => id !== subtaskId)
-        : [...dayCompletions, subtaskId];
-      
-      updatedGoal = {
-        ...goal,
-        dailySubtaskCompletions: {
-          ...currentCompletions,
-          [date]: newDayCompletions,
-        },
-      };
-      return updatedGoal;
-    });
-
-    if (updatedGoal) saveGoal(updatedGoal);
-    return { goals };
-  }),
-  
-  // Toggle weekly subtask completion for a specific week
-  toggleWeeklySubtask: (goalId, subtaskId, weekKey) => set((state) => {
-    let updatedGoal: Goal | undefined;
-    const goals = state.goals.map(goal => {
-      if (goal.id !== goalId) return goal;
-      
-      const currentCompletions = goal.weeklySubtaskCompletions ?? {};
-      const weekCompletions = currentCompletions[weekKey] ?? [];
-      
-      const newWeekCompletions = weekCompletions.includes(subtaskId)
-        ? weekCompletions.filter(id => id !== subtaskId)
-        : [...weekCompletions, subtaskId];
-      
-      updatedGoal = {
-        ...goal,
-        weeklySubtaskCompletions: {
-          ...currentCompletions,
-          [weekKey]: newWeekCompletions,
-        },
-      };
-      return updatedGoal;
-    });
-
     if (updatedGoal) saveGoal(updatedGoal);
     return { goals };
   }),
