@@ -51,13 +51,16 @@ export function CalendarDayCell({ day, isSelected, onClick }: CalendarDayCellPro
     : isToday
       ? { backgroundColor: 'var(--calendar-today)' }
       : undefined;
+  const indicatorStatus = totalCount > 0 && completedCount === totalCount
+    ? 'complete'
+    : status;
   
   return (
     <button
       onClick={onClick}
       className={`${baseClasses} ${stateClasses} ${opacityClass}`}
       style={backgroundStyle}
-      aria-label={`${dayOfMonth}, ${status === 'complete' ? 'all tasks complete' : status === 'incomplete' ? 'tasks incomplete' : status === 'partial' ? 'some tasks complete' : 'no tasks'}`}
+      aria-label={`${dayOfMonth}, ${indicatorStatus === 'complete' ? 'all tasks complete' : indicatorStatus === 'incomplete' ? 'tasks incomplete' : indicatorStatus === 'partial' ? 'some tasks complete' : 'no tasks'}`}
       aria-selected={isSelected}
     >
       {/* Day number */}
@@ -68,7 +71,7 @@ export function CalendarDayCell({ day, isSelected, onClick }: CalendarDayCellPro
       {/* Status indicator */}
       {totalCount > 0 && !isFuture && (
         <div className="absolute bottom-1">
-          <DayStatusIndicator status={status} size="sm" />
+          <DayStatusIndicator status={indicatorStatus} size="sm" />
         </div>
       )}
       
