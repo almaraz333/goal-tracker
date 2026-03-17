@@ -1,13 +1,14 @@
 {
   "name": "app",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "build:native": "npm run build",
     "icons:sync": "node scripts/sync-app-icons.mjs",
+    "release:prepare": "node scripts/prepare-release.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "cap:copy": "npm run icons:sync && npm run build:native && npx cap copy",

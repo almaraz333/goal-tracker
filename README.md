@@ -39,6 +39,7 @@ npm run cap:android
 npm run cap:ios
 npm run cap:open:android
 npm run cap:open:ios
+npm run release:prepare -- --app-id com.yourcompany.goaltracker --version 1.0.0 --build-number 1
 ```
 
 Current native behavior:
@@ -52,4 +53,5 @@ Current native behavior:
 - Android project files live under `android/`.
 - iOS project files live under `ios/`.
 - Capacitor configuration lives in `capacitor.config.ts`.
-- Before store submission, update the app identifier in `capacitor.config.ts` to a reverse-DNS identifier you control.
+- Use `npm run release:prepare -- --app-id ... --version ... --build-number ...` to update Android, iOS, Capacitor, and package metadata together.
+- See `RELEASE_CHECKLIST.md` for the full Android, iOS, and PWA release flow.

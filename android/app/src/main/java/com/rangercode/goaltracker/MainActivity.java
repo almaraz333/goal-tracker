@@ -1,4 +1,4 @@
-package com.goaltracker.app;
+package com.rangercode.goaltracker;
 
 import com.getcapacitor.BridgeActivity;
 

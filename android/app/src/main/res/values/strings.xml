@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Goal Tracker</string>
     <string name="title_activity_main">Goal Tracker</string>
-    <string name="package_name">com.goaltracker.app</string>
-    <string name="custom_url_scheme">com.goaltracker.app</string>
+    <string name="package_name">com.rangercode.goaltracker</string>
+    <string name="custom_url_scheme">com.rangercode.goaltracker</string>
 </resources>
