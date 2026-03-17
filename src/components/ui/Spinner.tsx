@@ -18,7 +18,7 @@ const sizeStyles = {
 export function Spinner({ size = 'md', className = '' }: SpinnerProps) {
   return (
     <Loader2
-      className={`animate-spin text-blue-500 ${sizeStyles[size]} ${className}`}
+      className={`animate-spin text-accent-primary ${sizeStyles[size]} ${className}`}
     />
   );
 }
@@ -31,7 +31,7 @@ export function LoadingOverlay({ message = 'Loading...' }: LoadingOverlayProps) 
   return (
     <div className="flex flex-col items-center justify-center min-h-[200px] gap-4">
       <Spinner size="lg" />
-      <p className="text-gray-400 text-sm">{message}</p>
+      <p className="text-text-muted text-sm">{message}</p>
     </div>
   );
 }

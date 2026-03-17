@@ -62,12 +62,12 @@ export function GoalCreationModal({
   const [error, setError] = useState<string | null>(null);
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategory, setNewCategory] = useState('');
+  const [createdCategories, setCreatedCategories] = useState<string[]>([]);
 
-  // Combine existing categories with "Add new..." option
   const categoryOptions = useMemo(() => {
-    const unique = [...new Set(['General', ...existingCategories])];
+    const unique = [...new Set(['General', ...existingCategories, ...createdCategories])];
     return unique;
-  }, [existingCategories]);
+  }, [existingCategories, createdCategories]);
 
   const handleInputChange = (field: keyof FormData, value: string | GoalType | GoalStatus | Priority) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -75,11 +75,21 @@ export function GoalCreationModal({
   };
 
   const handleAddNewCategory = () => {
-    if (!newCategory.trim()) return;
-    
-    setFormData(prev => ({ ...prev, category: newCategory.trim() }));
+    const trimmedCategory = newCategory.trim();
+    if (!trimmedCategory) return;
+
+    const matchingCategory = categoryOptions.find(
+      (category) => category.toLowerCase() === trimmedCategory.toLowerCase()
+    );
+
+    if (!matchingCategory) {
+      setCreatedCategories((prev) => [...prev, trimmedCategory]);
+    }
+
+    setFormData(prev => ({ ...prev, category: matchingCategory ?? trimmedCategory }));
     setShowNewCategory(false);
     setNewCategory('');
+    setError(null);
   };
 
   const handleSubmit = async () => {
@@ -121,7 +131,11 @@ export function GoalCreationModal({
       await saveGoalToIndexedDB(goal);
       
       // Save category if it's new
-      if (!categoryOptions.includes(formData.category)) {
+      const categoryExists = ['General', ...existingCategories].some(
+        (category) => category.toLowerCase() === formData.category.toLowerCase()
+      );
+
+      if (!categoryExists) {
         await saveCategoryToIndexedDB({ name: formData.category });
       }
 
@@ -153,6 +167,7 @@ export function GoalCreationModal({
     setError(null);
     setShowNewCategory(false);
     setNewCategory('');
+    setCreatedCategories([]);
   };
 
   const handleClose = () => {

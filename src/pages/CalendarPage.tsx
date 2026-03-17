@@ -50,19 +50,19 @@ export function CalendarPage({
         <StatCard
           label="Daily Goals"
           value={dailyGoals.length}
-          icon={<Target className="h-6 w-6 text-blue-400" />}
+          icon={<Target className="h-6 w-6 text-accent-primary" />}
           onClick={() => handleStatCardClick('daily')}
         />
         <StatCard
           label="Weekly Goals"
           value={weeklyGoals.length}
-          icon={<Calendar className="h-6 w-6 text-purple-400" />}
+          icon={<Calendar className="h-6 w-6 text-calendar-today" />}
           onClick={() => handleStatCardClick('weekly')}
         />
         <StatCard
           label="Monthly Goals"
           value={monthlyGoals.length}
-          icon={<Repeat className="h-6 w-6 text-green-400" />}
+          icon={<Repeat className="h-6 w-6 text-status-success" />}
           onClick={() => handleStatCardClick('monthly')}
         />
       </div>

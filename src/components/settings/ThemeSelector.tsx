@@ -5,16 +5,17 @@
  * Allows users to select a theme or create a custom one.
  */
 
-import { Check, Plus, Trash2 } from 'lucide-react';
+import { Check, Pencil, Plus, Trash2 } from 'lucide-react';
 import { presetThemes } from '@/config';
 import { useThemeState } from '@/store';
 import type { Theme } from '@/types';
 
 interface ThemeSelectorProps {
   onCreateCustom?: () => void;
+  onEditCustom?: (theme: Theme) => void;
 }
 
-export function ThemeSelector({ onCreateCustom }: ThemeSelectorProps) {
+export function ThemeSelector({ onCreateCustom, onEditCustom }: ThemeSelectorProps) {
   const { activeThemeId, customThemes, setTheme, deleteCustomTheme } = useThemeState();
   
   const allThemes = [...presetThemes, ...customThemes];
@@ -28,6 +29,7 @@ export function ThemeSelector({ onCreateCustom }: ThemeSelectorProps) {
             theme={theme}
             isActive={theme.id === activeThemeId}
             onSelect={() => setTheme(theme.id)}
+            onEdit={!theme.isBuiltin && onEditCustom ? () => onEditCustom(theme) : undefined}
             onDelete={!theme.isBuiltin ? () => deleteCustomTheme(theme.id) : undefined}
           />
         ))}
@@ -51,10 +53,11 @@ interface ThemeCardProps {
   theme: Theme;
   isActive: boolean;
   onSelect: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
 }
 
-function ThemeCard({ theme, isActive, onSelect, onDelete }: ThemeCardProps) {
+function ThemeCard({ theme, isActive, onSelect, onEdit, onDelete }: ThemeCardProps) {
   const colors = theme.colors;
   
   return (
@@ -75,6 +78,19 @@ function ThemeCard({ theme, isActive, onSelect, onDelete }: ThemeCardProps) {
         </div>
       )}
       
+      {onEdit && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          className="absolute top-2 left-2 w-5 h-5 bg-bg-card border border-border-primary rounded-full flex items-center justify-center hover:bg-bg-hover transition-colors"
+          aria-label={`Edit ${theme.name}`}
+        >
+          <Pencil className="h-3 w-3 text-text-muted" />
+        </button>
+      )}
+
       {/* Delete button for custom themes */}
       {onDelete && !isActive && (
         <button
@@ -106,6 +122,11 @@ function ThemeCard({ theme, isActive, onSelect, onDelete }: ThemeCardProps) {
           className="w-6 h-6 rounded" 
           style={{ backgroundColor: colors.accentPrimary }}
           title="Accent"
+        />
+        <div 
+          className="w-6 h-6 rounded" 
+          style={{ backgroundColor: colors.calendarToday }}
+          title="Calendar"
         />
         {/* Status previews */}
         <div 

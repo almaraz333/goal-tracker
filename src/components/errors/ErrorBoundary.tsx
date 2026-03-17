@@ -40,13 +40,13 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4">
           <Card className="max-w-md w-full text-center">
             <div className="text-4xl mb-4">😵</div>
-            <h2 className="text-xl font-bold text-gray-100 mb-2">
+            <h2 className="text-xl font-bold text-text-primary mb-2">
               Something went wrong
             </h2>
-            <p className="text-gray-400 mb-4">
+            <p className="text-text-muted mb-4">
               {this.state.error?.message ?? 'An unexpected error occurred'}
             </p>
             <div className="flex gap-2 justify-center">

@@ -11,10 +11,10 @@ interface DayStatusIndicatorProps {
 }
 
 const statusColors: Record<DayStatus, string> = {
-  complete: 'bg-green-500',
-  incomplete: 'bg-red-500',
-  partial: 'bg-orange-500',
-  none: 'bg-gray-700',
+  complete: 'bg-status-success',
+  incomplete: 'bg-status-danger',
+  partial: 'bg-status-warning',
+  none: 'bg-progress-empty',
 };
 
 const sizeStyles = {
@@ -48,10 +48,10 @@ interface MonthStatusIndicatorProps {
 }
 
 const monthStatusColors: Record<MonthStatus, string> = {
-  green: 'text-green-500',
-  orange: 'text-orange-500',
-  red: 'text-red-500',
-  none: 'text-gray-500',
+  green: 'text-status-success',
+  orange: 'text-status-warning',
+  red: 'text-status-danger',
+  none: 'text-text-muted',
 };
 
 export function MonthStatusIndicator({ status }: MonthStatusIndicatorProps) {

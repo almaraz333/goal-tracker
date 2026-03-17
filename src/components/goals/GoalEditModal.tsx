@@ -5,7 +5,7 @@
  * Does not allow raw markdown editing - only structured form fields.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   Save, 
   X, 
@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Modal, Button } from '@/components/ui';
 import type { Goal, GoalType, GoalStatus, Priority } from '@/types';
-import { saveGoalToIndexedDB, deleteGoalFromIndexedDB } from '@/services/indexedDbStorage.service';
+import { saveGoalToIndexedDB, deleteGoalFromIndexedDB, saveCategoryToIndexedDB } from '@/services/indexedDbStorage.service';
 
 interface GoalEditModalProps {
   isOpen: boolean;
@@ -65,6 +65,7 @@ export function GoalEditModal({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [newCategory, setNewCategory] = useState('');
+  const [createdCategories, setCreatedCategories] = useState<string[]>([]);
 
   // Initialize form with goal data when opened
   useEffect(() => {
@@ -81,11 +82,16 @@ export function GoalEditModal({
       });
       setError(null);
       setShowDeleteConfirm(false);
+      setShowNewCategory(false);
+      setNewCategory('');
+      setCreatedCategories([]);
     }
   }, [isOpen, goal]);
 
-  // Combine existing categories with goal's category
-  const categoryOptions = [...new Set(['General', ...existingCategories, goal.category])];
+  const categoryOptions = useMemo(
+    () => [...new Set(['General', ...existingCategories, goal.category, ...createdCategories])],
+    [createdCategories, existingCategories, goal.category]
+  );
 
   const handleInputChange = (field: keyof FormData, value: string | GoalType | GoalStatus | Priority) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -93,11 +99,21 @@ export function GoalEditModal({
   };
 
   const handleAddNewCategory = () => {
-    if (!newCategory.trim()) return;
-    
-    setFormData(prev => ({ ...prev, category: newCategory.trim() }));
+    const trimmedCategory = newCategory.trim();
+    if (!trimmedCategory) return;
+
+    const matchingCategory = categoryOptions.find(
+      (category) => category.toLowerCase() === trimmedCategory.toLowerCase()
+    );
+
+    if (!matchingCategory) {
+      setCreatedCategories((prev) => [...prev, trimmedCategory]);
+    }
+
+    setFormData(prev => ({ ...prev, category: matchingCategory ?? trimmedCategory }));
     setShowNewCategory(false);
     setNewCategory('');
+    setError(null);
   };
 
   const handleSubmit = async () => {
@@ -116,6 +132,14 @@ export function GoalEditModal({
     setError(null);
 
     try {
+      const categoryExists = ['General', ...existingCategories, goal.category].some(
+        (category) => category.toLowerCase() === formData.category.toLowerCase()
+      );
+
+      if (!categoryExists) {
+        await saveCategoryToIndexedDB({ name: formData.category });
+      }
+
       // Create updated goal object (preserve existing completions and progress)
       const updatedGoal: Goal = {
         ...goal,

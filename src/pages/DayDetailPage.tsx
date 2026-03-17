@@ -26,10 +26,10 @@ export function DayDetailPage({ dayData, onBack, onToggleTask }: DayDetailPagePr
         </Button>
         
         <div>
-          <h2 className="text-xl font-bold text-gray-100">
+          <h2 className="text-xl font-bold text-text-primary">
             {formatDateDisplay(date, { weekday: 'long', month: 'short', day: 'numeric' })}
           </h2>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-text-muted">
             {dayData.isToday ? "Today's tasks" : dayData.isFuture ? 'Upcoming tasks' : 'Past tasks'}
           </p>
         </div>
@@ -39,9 +39,9 @@ export function DayDetailPage({ dayData, onBack, onToggleTask }: DayDetailPagePr
       {!dayData.isFuture && dayData.totalCount > 0 && (
         <Card
           className={`
-            ${dayData.status === 'complete' ? 'bg-green-900/30 border-green-700' :
-              dayData.status === 'partial' ? 'bg-orange-900/30 border-orange-700' :
-              'bg-red-900/30 border-red-700'}
+            ${dayData.status === 'complete' ? 'bg-status-success-bg border-status-success-border' :
+              dayData.status === 'partial' ? 'bg-status-warning-bg border-status-warning-border' :
+              'bg-status-danger-bg border-status-danger-border'}
             border
           `}
           padding="sm"
@@ -51,14 +51,14 @@ export function DayDetailPage({ dayData, onBack, onToggleTask }: DayDetailPagePr
               {dayData.status === 'complete' ? '✅' : dayData.status === 'partial' ? '🔶' : '❌'}
             </span>
             <div>
-              <p className="font-medium text-gray-100">
+              <p className="font-medium text-text-primary">
                 {dayData.status === 'complete'
                   ? 'All tasks completed!'
                   : dayData.status === 'partial'
                   ? 'Making progress...'
                   : 'Tasks remaining'}
               </p>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-text-secondary">
                 {dayData.completedCount} of {dayData.totalCount} tasks done
               </p>
             </div>

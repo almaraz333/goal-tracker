@@ -10,6 +10,32 @@ import { presetThemes, getDefaultTheme } from '@/config/themes';
 const THEME_STORAGE_KEY = 'goaltracker_theme';
 const CUSTOM_THEMES_KEY = 'goaltracker_custom_themes';
 
+function normalizeThemeColors(colors?: Partial<ThemeColors>): ThemeColors {
+  return {
+    ...getDefaultTheme().colors,
+    ...colors,
+  };
+}
+
+function normalizeStoredTheme(theme: unknown): Theme | null {
+  if (!theme || typeof theme !== 'object') {
+    return null;
+  }
+
+  const candidate = theme as Partial<Theme> & { colors?: Partial<ThemeColors> };
+
+  if (typeof candidate.id !== 'string' || typeof candidate.name !== 'string') {
+    return null;
+  }
+
+  return {
+    id: candidate.id,
+    name: candidate.name,
+    colors: normalizeThemeColors(candidate.colors),
+    isBuiltin: Boolean(candidate.isBuiltin),
+  };
+}
+
 /**
  * Apply a theme's colors to the document root as CSS variables
  */
@@ -82,8 +108,9 @@ export function applyTheme(theme: Theme): void {
  * Get the stored theme ID from localStorage
  */
 export function getStoredThemeId(): string {
-  if (typeof window === 'undefined') return 'default-dark';
-  return localStorage.getItem(THEME_STORAGE_KEY) ?? 'default-dark';
+  const defaultThemeId = getDefaultTheme().id;
+  if (typeof window === 'undefined') return defaultThemeId;
+  return localStorage.getItem(THEME_STORAGE_KEY) ?? defaultThemeId;
 }
 
 /**
@@ -102,7 +129,10 @@ export function getStoredCustomThemes(): Theme[] {
   try {
     const stored = localStorage.getItem(CUSTOM_THEMES_KEY);
     if (!stored) return [];
-    return JSON.parse(stored) as Theme[];
+    const parsed = JSON.parse(stored) as unknown[];
+    return parsed
+      .map(normalizeStoredTheme)
+      .filter((theme): theme is Theme => theme !== null);
   } catch {
     return [];
   }
@@ -113,7 +143,10 @@ export function getStoredCustomThemes(): Theme[] {
  */
 export function setStoredCustomThemes(themes: Theme[]): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(CUSTOM_THEMES_KEY, JSON.stringify(themes));
+  const normalizedThemes = themes
+    .map(normalizeStoredTheme)
+    .filter((theme): theme is Theme => theme !== null);
+  localStorage.setItem(CUSTOM_THEMES_KEY, JSON.stringify(normalizedThemes));
 }
 
 /**
@@ -137,6 +170,9 @@ export function getThemeById(themeId: string): Theme | undefined {
 export function initializeTheme(): Theme {
   const themeId = getStoredThemeId();
   const theme = getThemeById(themeId) ?? getDefaultTheme();
+  if (theme.id !== themeId) {
+    setStoredThemeId(theme.id);
+  }
   applyTheme(theme);
   return theme;
 }
@@ -152,7 +188,7 @@ export function createCustomTheme(
   return {
     id: `custom-${Date.now()}`,
     name,
-    colors: { ...baseTheme.colors, ...colorOverrides },
+    colors: normalizeThemeColors({ ...baseTheme.colors, ...colorOverrides }),
     isBuiltin: false,
   };
 }

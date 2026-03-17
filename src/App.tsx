@@ -213,7 +213,7 @@ export function App() {
         {canCreateGoals && (
           <button
             onClick={() => setShowCreateGoal(true)}
-            className="fixed bottom-20 right-4 w-14 h-14 bg-accent-primary hover:bg-accent-primary/90 text-white rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-40"
+            className="fixed bottom-20 right-4 w-14 h-14 bg-accent-primary hover:bg-accent-primary/90 text-text-inverse rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-40"
             aria-label="Create new goal"
           >
             <Plus className="h-6 w-6" />

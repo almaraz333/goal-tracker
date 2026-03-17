@@ -45,16 +45,16 @@ export function WeeklySidebar({
               onClick={() => onWeekSelect(week.weekIndex)}
               className={`
                 flex-shrink-0 px-3 py-2 rounded-lg text-sm font-medium transition-colors border-2
-                ${isSelected ? 'border-blue-500' : 'border-transparent'}
+                ${isSelected ? 'border-accent-primary' : 'border-transparent'}
                 ${week.status === 'complete' 
-                  ? 'bg-green-900/30 text-green-400' 
+                  ? 'bg-status-success-bg text-status-success' 
                   : week.status === 'incomplete'
-                    ? 'bg-red-900/30 text-red-400'
+                    ? 'bg-status-danger-bg text-status-danger'
                     : week.status === 'partial'
-                      ? 'bg-orange-900/30 text-orange-400'
+                      ? 'bg-status-warning-bg text-status-warning'
                       : hasGoals
-                        ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                        : 'bg-gray-800/50 text-gray-600'
+                        ? 'bg-bg-secondary text-text-secondary hover:bg-bg-hover'
+                        : 'bg-bg-secondary/50 text-text-muted'
                 }
               `}
             >
@@ -67,23 +67,23 @@ export function WeeklySidebar({
       {/* Week Info */}
       <Card className="p-4">
         <div className="flex items-center gap-2 mb-3">
-          <Calendar className="h-5 w-5 text-blue-400" />
-          <h3 className="text-lg font-semibold text-gray-100">
+          <Calendar className="h-5 w-5 text-calendar-today" />
+          <h3 className="text-lg font-semibold text-text-primary">
             Week {displayWeekIndex + 1}
           </h3>
           {displayWeek.status === 'complete' && (
-            <span className="ml-auto text-green-400 text-sm">✓ Complete</span>
+            <span className="ml-auto text-status-success text-sm">✓ Complete</span>
           )}
         </div>
         
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-text-muted mb-4">
           {formatWeekDatesFromDays(displayWeek)}
         </p>
         
         {/* Weekly Goals List */}
         {hasWeeklyGoals ? (
           <div className="space-y-3">
-            <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wide">
+            <h4 className="text-sm font-medium text-text-muted uppercase tracking-wide">
               Weekly Goals
             </h4>
             {displayWeek.weeklyGoals.map((task) => (
@@ -95,7 +95,7 @@ export function WeeklySidebar({
             ))}
           </div>
         ) : (
-          <p className="text-gray-500 text-sm italic">
+          <p className="text-text-muted text-sm italic">
             No weekly goals for this week
           </p>
         )}
@@ -111,13 +111,13 @@ interface WeeklyGoalItemProps {
 
 function WeeklyGoalItem({ task, onToggleCompletion }: WeeklyGoalItemProps) {
   const priorityClasses = {
-    high: 'bg-red-900/50 text-red-300',
-    medium: 'bg-yellow-900/50 text-yellow-300',
-    low: 'bg-gray-700 text-gray-400',
+    high: 'bg-status-danger-bg text-status-danger',
+    medium: 'bg-status-warning-bg text-status-warning',
+    low: 'bg-status-info-bg text-status-info',
   } as const;
 
   return (
-    <div className="w-full p-3 rounded-lg bg-gray-800">
+    <div className="w-full p-3 rounded-lg bg-bg-secondary border border-border-primary">
       <div className="flex items-start gap-3">
         <Checkbox
           checked={task.isCompleted}
@@ -126,13 +126,13 @@ function WeeklyGoalItem({ task, onToggleCompletion }: WeeklyGoalItemProps) {
           className="pt-0.5"
         />
         <div className="flex-1 min-w-0">
-          <p className={`font-medium text-sm ${task.isCompleted ? 'text-green-300 line-through' : 'text-gray-200'}`}>
+          <p className={`font-medium text-sm ${task.isCompleted ? 'text-status-success line-through' : 'text-text-primary'}`}>
             {task.goal.title}
           </p>
           {task.goal.description && (
-            <p className="text-xs text-gray-500 mt-1">{task.goal.description}</p>
+            <p className="text-xs text-text-muted mt-1">{task.goal.description}</p>
           )}
-          <p className="text-xs text-gray-500 mt-2">{task.goal.category}</p>
+          <p className="text-xs text-text-muted mt-2">{task.goal.category}</p>
         </div>
         <span className={`text-xs px-2 py-1 rounded flex-shrink-0 ${priorityClasses[task.goal.priority]}`}>
           {task.goal.priority}

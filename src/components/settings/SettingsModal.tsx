@@ -7,6 +7,7 @@ import { Settings, X, Palette, HardDrive, Smartphone } from 'lucide-react';
 import { Button, Modal, Card } from '@/components/ui';
 import { ThemeSelector } from './ThemeSelector';
 import { CustomThemeEditor } from './CustomThemeEditor';
+import type { Theme } from '@/types';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -15,9 +16,25 @@ interface SettingsModalProps {
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [isEditingTheme, setIsEditingTheme] = useState(false);
+  const [editingTheme, setEditingTheme] = useState<Theme | undefined>(undefined);
+
+  const handleOpenCreateTheme = () => {
+    setEditingTheme(undefined);
+    setIsEditingTheme(true);
+  };
+
+  const handleOpenEditTheme = (theme: Theme) => {
+    setEditingTheme(theme);
+    setIsEditingTheme(true);
+  };
+
+  const handleCloseThemeEditor = () => {
+    setEditingTheme(undefined);
+    setIsEditingTheme(false);
+  };
 
   const handleClose = () => {
-    setIsEditingTheme(false);
+    handleCloseThemeEditor();
     onClose();
   };
 
@@ -32,13 +49,16 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </div>
           
           {isEditingTheme ? (
-            <CustomThemeEditor onClose={() => setIsEditingTheme(false)} />
+              <CustomThemeEditor editingTheme={editingTheme} onClose={handleCloseThemeEditor} />
           ) : (
             <>
               <p className="text-xs text-text-muted mb-3">
                 Choose a theme or create your own custom color scheme.
               </p>
-              <ThemeSelector onCreateCustom={() => setIsEditingTheme(true)} />
+                <ThemeSelector
+                  onCreateCustom={handleOpenCreateTheme}
+                  onEditCustom={handleOpenEditTheme}
+                />
             </>
           )}
         </Card>
@@ -80,10 +100,10 @@ export function SettingsButton() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors"
+        className="p-2 rounded-lg bg-bg-secondary hover:bg-bg-hover transition-colors"
         aria-label="Open settings"
       >
-        <Settings className="h-5 w-5 text-gray-400" />
+        <Settings className="h-5 w-5 text-text-muted" />
       </button>
       <SettingsModal 
         isOpen={isOpen} 

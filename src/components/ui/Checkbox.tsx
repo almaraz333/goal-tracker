@@ -28,10 +28,10 @@ export function Checkbox({
           className="
             w-5 h-5
             rounded
-            border-gray-600
-            bg-gray-700
-            text-green-500
-            focus:ring-2 focus:ring-green-500 focus:ring-offset-0
+            border-border-secondary
+            bg-bg-tertiary
+            text-status-success
+            focus:ring-2 focus:ring-accent-primary focus:ring-offset-0
             cursor-pointer
             transition-colors duration-150
           "
@@ -45,7 +45,7 @@ export function Checkbox({
               htmlFor={checkboxId}
               className={`
                 text-sm font-medium cursor-pointer
-                ${props.checked ? 'text-gray-500 line-through' : 'text-gray-200'}
+                ${props.checked ? 'text-text-muted line-through' : 'text-text-primary'}
                 transition-colors duration-150
               `}
             >
@@ -53,7 +53,7 @@ export function Checkbox({
             </label>
           )}
           {description && (
-            <span className="text-xs text-gray-500 mt-0.5">
+            <span className="text-xs text-text-muted mt-0.5">
               {description}
             </span>
           )}

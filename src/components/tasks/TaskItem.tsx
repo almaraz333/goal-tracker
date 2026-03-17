@@ -25,7 +25,7 @@ export function TaskItem({ task, onToggle }: TaskItemProps) {
       className={`
         flex items-start gap-3 p-3 rounded-lg
         transition-colors duration-150
-        ${isCompleted ? 'bg-gray-800/30' : 'bg-gray-800'}
+        ${isCompleted ? 'bg-bg-secondary/60' : 'bg-bg-secondary'}
       `}
     >
       <Checkbox
@@ -39,7 +39,7 @@ export function TaskItem({ task, onToggle }: TaskItemProps) {
           <span
             className={`
               font-medium text-sm
-              ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-100'}
+              ${isCompleted ? 'text-text-muted line-through' : 'text-text-primary'}
             `}
           >
             {goal.title}
@@ -51,14 +51,14 @@ export function TaskItem({ task, onToggle }: TaskItemProps) {
         </div>
         
         {goal.description && (
-          <p className="text-xs text-gray-500 truncate">
+          <p className="text-xs text-text-muted truncate">
             {goal.description}
           </p>
         )}
       </div>
       
       {/* Category indicator */}
-      <div className="text-xs text-gray-500 whitespace-nowrap">
+      <div className="text-xs text-text-muted whitespace-nowrap">
         {goal.category}
       </div>
     </div>

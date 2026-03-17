@@ -13,6 +13,7 @@ interface CalendarDayCellProps {
 
 export function CalendarDayCell({ day, isSelected, onClick }: CalendarDayCellProps) {
   const {
+    date,
     dayOfMonth,
     isCurrentMonth,
     isToday,
@@ -21,6 +22,10 @@ export function CalendarDayCell({ day, isSelected, onClick }: CalendarDayCellPro
     totalCount,
     completedCount,
   } = day;
+
+  const [year, month, dayNumber] = date.split('-').map(Number);
+  const dayOfWeek = new Date(year, month - 1, dayNumber).getDay();
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
   
   // Build class names
   const baseClasses = `
@@ -28,28 +33,35 @@ export function CalendarDayCell({ day, isSelected, onClick }: CalendarDayCellPro
     w-full aspect-square rounded-lg
     transition-all duration-150 ease-out
     cursor-pointer
-    focus:outline-none focus:ring-2 focus:ring-blue-500
+    focus:outline-none focus:ring-2 focus:ring-border-focus
   `;
   
   const stateClasses = isSelected
-    ? 'bg-blue-600 text-white ring-2 ring-blue-400'
+    ? 'text-text-inverse ring-2 ring-accent-primary'
     : isToday
-    ? 'bg-gray-700 text-white ring-1 ring-blue-500'
+    ? 'text-text-inverse ring-1 ring-calendar-today'
     : isCurrentMonth
-    ? 'bg-gray-800 hover:bg-gray-700 text-gray-100'
-    : 'bg-gray-900 text-gray-600';
+    ? `${isWeekend ? 'bg-calendar-weekend' : 'bg-bg-secondary'} hover:bg-bg-hover text-text-primary`
+    : 'bg-bg-primary text-text-muted';
   
   const opacityClass = !isCurrentMonth ? 'opacity-40' : '';
+  const taskCountClasses = isSelected || isToday ? 'text-text-inverse opacity-80' : 'text-text-muted';
+  const backgroundStyle = isSelected
+    ? { backgroundColor: 'var(--calendar-selected)' }
+    : isToday
+      ? { backgroundColor: 'var(--calendar-today)' }
+      : undefined;
   
   return (
     <button
       onClick={onClick}
       className={`${baseClasses} ${stateClasses} ${opacityClass}`}
+      style={backgroundStyle}
       aria-label={`${dayOfMonth}, ${status === 'complete' ? 'all tasks complete' : status === 'incomplete' ? 'tasks incomplete' : status === 'partial' ? 'some tasks complete' : 'no tasks'}`}
       aria-selected={isSelected}
     >
       {/* Day number */}
-      <span className={`text-sm font-medium ${isToday ? 'font-bold' : ''}`}>
+      <span className={`text-sm font-medium ${isToday || isSelected ? 'font-bold' : ''}`}>
         {dayOfMonth}
       </span>
       
@@ -62,7 +74,7 @@ export function CalendarDayCell({ day, isSelected, onClick }: CalendarDayCellPro
       
       {/* Task count badge for days with many tasks */}
       {totalCount > 0 && (
-        <span className="absolute top-0.5 right-0.5 text-[10px] text-gray-400">
+        <span className={`absolute top-0.5 right-0.5 text-[10px] ${taskCountClasses}`}>
           {completedCount}/{totalCount}
         </span>
       )}

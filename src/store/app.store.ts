@@ -169,9 +169,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Theme actions
   setTheme: (themeId) => {
     const theme = getThemeById(themeId) ?? getDefaultTheme();
+    const resolvedThemeId = theme.id;
     applyTheme(theme);
-    setStoredThemeId(themeId);
-    set({ activeThemeId: themeId });
+    setStoredThemeId(resolvedThemeId);
+    set({ activeThemeId: resolvedThemeId });
   },
   
   saveCustomTheme: (theme) => {
