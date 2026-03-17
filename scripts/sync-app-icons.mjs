@@ -7,7 +7,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
 
-const pwaIconSource = path.join(projectRoot, 'public', 'pwa-512x512.png');
+const iconSource = path.join(projectRoot, 'public', 'favicon.png');
+const webTargets = [
+  { size: 180, outputPath: path.join(projectRoot, 'public', 'apple-touch-icon.png') },
+  { size: 192, outputPath: path.join(projectRoot, 'public', 'pwa-192x192.png') },
+  { size: 512, outputPath: path.join(projectRoot, 'public', 'pwa-512x512.png') },
+];
 const iosAppIconPath = path.join(
   projectRoot,
   'ios',
@@ -31,14 +36,18 @@ const backgroundColor = '#1f2937';
 async function renderIcon(size, outputPath) {
   await mkdir(path.dirname(outputPath), { recursive: true });
 
-  await sharp(pwaIconSource)
+  await sharp(iconSource)
     .resize(size, size, {
-      fit: 'contain',
+      fit: 'cover',
       kernel: sharp.kernel.lanczos3,
     })
     .flatten({ background: backgroundColor })
     .png()
     .toFile(outputPath);
+}
+
+async function syncWebIcons() {
+  await Promise.all(webTargets.map(({ size, outputPath }) => renderIcon(size, outputPath)));
 }
 
 async function syncAndroidIcons() {
@@ -60,8 +69,8 @@ async function syncIosIcon() {
 }
 
 async function main() {
-  await Promise.all([syncAndroidIcons(), syncIosIcon()]);
-  console.log('Native app icons synced from public/pwa-512x512.png');
+  await Promise.all([syncWebIcons(), syncAndroidIcons(), syncIosIcon()]);
+  console.log('Web and native app icons synced from public/favicon.png');
 }
 
 main().catch((error) => {
